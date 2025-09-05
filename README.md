@@ -52,4 +52,4 @@ A full-stack recruitment platform built with React and ASP.NET Core.
    database update
    ```
 
-5. Start the server:
+5. Start the server (Run Program.cs)
