@@ -1,0 +1,41 @@
+# === Node / React (Vite) ===
+recruitlab.client/node_modules
+recruitlab.client/.vite
+recruitlab.client/dist
+recruitlab.client/.DS_Store
+
+# === ASP.NET Core ===
+recruitlab.server/bin/
+recruitlab.server/obj/
+recruitlab.server/*.user
+recruitlab.server/*.suo
+recruitlab.server/*.log
+recruitlab.server/appsettings.json
+recruitlab.server/appsettings.Development.json
+
+# === Environment & Config ===
+*.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# === Logs ===
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# === System Files ===
+.DS_Store
+Thumbs.db
+
+# === IDE & VS Files ===
+.vs/
+.vscode/
+*.user
+*.suo
+
+# === Build & Publish ===
+/publish/
+/out/
