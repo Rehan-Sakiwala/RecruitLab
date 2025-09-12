@@ -43,7 +43,7 @@ namespace Server.Controllers
             var roles = await roleRepo.GetAll();
             var role = roles.Where(r => r.Id == user.RoleId).FirstOrDefault();
 
-            var token = GenerateToken(user.Email, role.Name);
+            var token = GenerateToken(user.Id, user.Email, role.Name);
             return Ok(new AuthTokenDto()
             {
                 Id = user.Id,
@@ -53,13 +53,14 @@ namespace Server.Controllers
             });
         }
 
-        private string GenerateToken(string email, string role)
+        private string GenerateToken(int userId, string email, string role)
         {
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("163f10144207a3d1950e6fb4b59a128e"));
             var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
             var claims = new[]
             {
-                new Claim(ClaimTypes.Name,email),
+                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
+                new Claim(ClaimTypes.Name, email),
                 new Claim(ClaimTypes.Role, role)
             };
             var token = new JwtSecurityToken(
