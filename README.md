@@ -22,7 +22,27 @@ A full-stack recruitment platform built with React and ASP.NET Core.
 - SQL Server (LocalDB or full instance)
 - Visual Studio 2022 or VS Code with C# extension
 
-## Installation
+### Frontend Setup
+
+1. Navigate to the client directory:
+
+   ```bash
+   cd recruitlab.client
+   ```
+
+2. Install dependencies:
+
+   ```bash
+   npm install
+   ```
+
+3. Start the development server:
+
+   ```bash
+   npm run dev
+   ```
+
+   The frontend will be available at `http://localhost:5173`
 
 ### Backend Setup
 
