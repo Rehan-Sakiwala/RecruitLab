@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
+import SkillCategoryForm from './SkillCategoryForm';
+import SkillForm from './SkillForm';
 
 const Dashboard = () => {
   const { user, isAdmin, isRecruiter } = useAuth();
@@ -14,6 +16,8 @@ const Dashboard = () => {
   });
   const [recentJobs, setRecentJobs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showSkillCategoryForm, setShowSkillCategoryForm] = useState(false);
+  const [showSkillForm, setShowSkillForm] = useState(false);
 
   useEffect(() => {
     fetchDashboardData();
@@ -193,7 +197,35 @@ const Dashboard = () => {
               </div>
             </Link>
 
+            <button
+              onClick={() => setShowSkillCategoryForm(true)}
+              className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left w-full"
+            >
+              <div className="flex-shrink-0">
+                <svg className="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+              </div>
+              <div className="ml-4">
+                <h4 className="text-sm font-medium text-gray-900">Add Skill Category</h4>
+                <p className="text-sm text-gray-500">Create a new skill category</p>
+              </div>
+            </button>
 
+            <button
+              onClick={() => setShowSkillForm(true)}
+              className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-left w-full"
+            >
+              <div className="flex-shrink-0">
+                <svg className="h-8 w-8 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+              </div>
+              <div className="ml-4">
+                <h4 className="text-sm font-medium text-gray-900">Add Skill</h4>
+                <p className="text-sm text-gray-500">Create a new skill</p>
+              </div>
+            </button>
           </div>
         </div>
       </div>
@@ -233,6 +265,60 @@ const Dashboard = () => {
           </div>
         )}
       </div>
+
+      {showSkillCategoryForm && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium text-gray-900">Add Skill Category</h3>
+                <button
+                  onClick={() => setShowSkillCategoryForm(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <SkillCategoryForm 
+                onClose={() => setShowSkillCategoryForm(false)}
+                onSuccess={() => {
+                  setShowSkillCategoryForm(false);
+                  fetchDashboardData();
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showSkillForm && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-medium text-gray-900">Add Skill</h3>
+                <button
+                  onClick={() => setShowSkillForm(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <SkillForm 
+                onClose={() => setShowSkillForm(false)}
+                onSuccess={() => {
+                  setShowSkillForm(false);
+                  fetchDashboardData();
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
