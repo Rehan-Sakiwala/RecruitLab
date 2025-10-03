@@ -12,7 +12,6 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 
-// Add CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
@@ -70,6 +69,10 @@ builder.Services.AddScoped<IRepository<JobOpening>, Repository<JobOpening>>();
 builder.Services.AddScoped<IRepository<Skill>, Repository<Skill>>();
 builder.Services.AddScoped<IRepository<SkillCategory>, Repository<SkillCategory>>();
 builder.Services.AddScoped<IRepository<JobSkill>, Repository<JobSkill>>();
+builder.Services.AddScoped<IRepository<Candidate>, Repository<Candidate>>();
+builder.Services.AddScoped<IRepository<CandidateSkill>, Repository<CandidateSkill>>();
+builder.Services.AddScoped<IRepository<CandidateCV>, Repository<CandidateCV>>();
+builder.Services.AddScoped<IRepository<CandidateJobMatch>, Repository<CandidateJobMatch>>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
 {
