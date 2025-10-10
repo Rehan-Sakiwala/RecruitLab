@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using recruitlab.server.Data;
 using Server.Data;
 using Server.Model.Entities;
+using Server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -73,6 +74,11 @@ builder.Services.AddScoped<IRepository<Candidate>, Repository<Candidate>>();
 builder.Services.AddScoped<IRepository<CandidateSkill>, Repository<CandidateSkill>>();
 builder.Services.AddScoped<IRepository<CandidateCV>, Repository<CandidateCV>>();
 builder.Services.AddScoped<IRepository<CandidateJobMatch>, Repository<CandidateJobMatch>>();
+
+// Register custom services
+builder.Services.AddScoped<ICVProcessingService, CVProcessingService>();
+builder.Services.AddScoped<IExcelImportService, ExcelImportService>();
+builder.Services.AddScoped<ICandidateMatchingService, CandidateMatchingService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
 {

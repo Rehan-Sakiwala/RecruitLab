@@ -13,7 +13,7 @@ namespace Server.Model.Entities
         Withdrawn = 9
     }
 
-    public enum MatchType
+    public enum MatchCategory
     {
         Automatic = 1,
         Manual = 2,
