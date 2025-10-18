@@ -26,7 +26,6 @@ namespace Server.Model.Entities
         public int CandidateId { get; set; }
         public int JobOpeningId { get; set; }
         public MatchStatus Status { get; set; } = MatchStatus.Pending;
-        public MatchType Type { get; set; } = MatchType.Automatic;
         public decimal MatchScore { get; set; }
         public string? MatchDetails { get; set; } 
         public string? Notes { get; set; }

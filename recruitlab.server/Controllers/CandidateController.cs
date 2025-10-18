@@ -5,7 +5,6 @@ using recruitlab.server.Data;
 using Server.Data;
 using Server.Model.DTO;
 using Server.Model.Entities;
-using Server.Services;
 using System.Security.Claims;
 
 namespace Server.Controllers
@@ -20,28 +19,19 @@ namespace Server.Controllers
         private readonly IRepository<Skill> skillRepo;
         private readonly IRepository<User> userRepo;
         private readonly AppDbContext dbContext;
-        private readonly ICVProcessingService cvProcessingService;
-        private readonly IExcelImportService excelImportService;
-        private readonly ICandidateMatchingService candidateMatchingService;
 
         public CandidateController(
             IRepository<Candidate> candidateRepo,
             IRepository<CandidateSkill> candidateSkillRepo,
             IRepository<Skill> skillRepo,
             IRepository<User> userRepo,
-            AppDbContext dbContext,
-            ICVProcessingService cvProcessingService,
-            IExcelImportService excelImportService,
-            ICandidateMatchingService candidateMatchingService)
+            AppDbContext dbContext)
         {
             this.candidateRepo = candidateRepo;
             this.candidateSkillRepo = candidateSkillRepo;
             this.skillRepo = skillRepo;
             this.userRepo = userRepo;
             this.dbContext = dbContext;
-            this.cvProcessingService = cvProcessingService;
-            this.excelImportService = excelImportService;
-            this.candidateMatchingService = candidateMatchingService;
         }
 
         [HttpGet]
@@ -74,7 +64,7 @@ namespace Server.Controllers
 
             if (!string.IsNullOrEmpty(search))
             {
-                query = query.Where(c => 
+                query = query.Where(c =>
                     c.FirstName.Contains(search) ||
                     c.LastName.Contains(search) ||
                     c.Email.Contains(search) ||
@@ -385,7 +375,7 @@ namespace Server.Controllers
                 .Include(c => c.CandidateSkills)
                     .ThenInclude(cs => cs.Skill)
                         .ThenInclude(s => s.SkillCategory)
-                .Where(c => 
+                .Where(c =>
                     c.FirstName.Contains(query) ||
                     c.LastName.Contains(query) ||
                     c.Email.Contains(query) ||
@@ -397,89 +387,6 @@ namespace Server.Controllers
 
             var candidateDtos = candidates.Select(MapToCandidateDto).ToList();
             return Ok(candidateDtos);
-        }
-
-        [HttpPost("upload-cv")]
-        public async Task<IActionResult> UploadCV([FromForm] CVUploadDto dto)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            var userId = GetCurrentUserId();
-            if (userId == null)
-                return Unauthorized();
-
-            var result = await cvProcessingService.ProcessCVAsync(dto.File, userId.Value);
-            
-            if (result.Success)
-                return Ok(result);
-            else
-                return BadRequest(result);
-        }
-
-        [HttpPost("bulk-import")]
-        public async Task<IActionResult> BulkImportCandidates([FromForm] ExcelImportDto dto)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            var userId = GetCurrentUserId();
-            if (userId == null)
-                return Unauthorized();
-
-            var result = await excelImportService.ImportCandidatesFromExcelAsync(dto, userId.Value);
-            
-            if (result.Success)
-                return Ok(result);
-            else
-                return BadRequest(result);
-        }
-
-        [HttpGet("excel-template")]
-        public async Task<IActionResult> GetExcelTemplate()
-        {
-            var template = await excelImportService.GenerateExcelTemplateAsync();
-            return File(template, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "candidate_import_template.xlsx");
-        }
-
-        [HttpPost("match-job/{jobOpeningId}")]
-        public async Task<IActionResult> MatchCandidatesToJob(int jobOpeningId, [FromBody] JobMatchRequestDto request)
-        {
-            if (jobOpeningId != request.JobOpeningId)
-                return BadRequest(new { message = "Job opening ID mismatch" });
-
-            var matches = await candidateMatchingService.FindMatchingCandidatesAsync(request);
-            return Ok(matches);
-        }
-
-        [HttpPost("{candidateId}/match-job/{jobOpeningId}")]
-        public async Task<IActionResult> CreateCandidateJobMatch(int candidateId, int jobOpeningId, [FromBody] CreateCandidateJobMatchDto? dto = null)
-        {
-            var userId = GetCurrentUserId();
-            if (userId == null)
-                return Unauthorized();
-
-            var matchType = dto?.Type ?? MatchCategory.Manual;
-            var result = await candidateMatchingService.CreateCandidateJobMatchAsync(candidateId, jobOpeningId, userId.Value, matchType);
-            
-            return Ok(result);
-        }
-
-        [HttpPost("search-profile")]
-        public async Task<IActionResult> SearchCandidatesByProfile([FromBody] ProfileSearchDto searchDto)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            var matches = await candidateMatchingService.SearchCandidatesByProfileAsync(searchDto);
-            return Ok(matches);
-        }
-
-        [HttpGet("{candidateId}/match-score/{jobOpeningId}")]
-        public async Task<IActionResult> GetMatchScore(int candidateId, int jobOpeningId)
-        {
-            var score = await candidateMatchingService.CalculateMatchScoreAsync(candidateId, jobOpeningId);
-            return Ok(new { MatchScore = score, Percentage = score.ToString("P2") });
         }
 
         private int? GetCurrentUserId()
@@ -584,8 +491,6 @@ namespace Server.Controllers
                     JobDepartment = cjm.JobOpening?.Department ?? "",
                     Status = (int)cjm.Status,
                     StatusName = cjm.Status.ToString(),
-                    Type = (int)cjm.Type,
-                    TypeName = cjm.Type.ToString(),
                     MatchScore = cjm.MatchScore,
                     MatchDetails = cjm.MatchDetails,
                     Notes = cjm.Notes,

@@ -142,10 +142,6 @@ namespace recruitlab.server.Data
                 .HasConversion<int>();
 
             modelBuilder.Entity<CandidateJobMatch>()
-                .Property(cjm => cjm.Type)
-                .HasConversion<int>();
-
-            modelBuilder.Entity<CandidateJobMatch>()
                 .HasIndex(cjm => new { cjm.CandidateId, cjm.JobOpeningId })
                 .IsUnique();
         }
