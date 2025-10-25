@@ -1,10 +1,12 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using recruitlab.server.Services.Interface;
 using Server.Data;
 using Server.Model.DTO;
 using Server.Model.Entities;
@@ -15,61 +17,76 @@ namespace Server.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private readonly IRepository<User> userRepo;
-        private readonly IRepository<Role> roleRepo;
+        private readonly IUserService _userService;
 
-        public AuthController(IRepository<User> userRepo, IRepository<Role> roleRepo)
+        public AuthController(IUserService userService)
         {
-            this.userRepo = userRepo;
-            this.roleRepo = roleRepo;
+            _userService = userService;
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] AuthDto model)
+        [AllowAnonymous]
+        public async Task<IActionResult> Login([FromBody] LoginDto dto)
         {
-            var users = await userRepo.GetAll();
-            var user = users.Where(x => x.Email == model.Email).FirstOrDefault();
+            var (success, message, data) = await _userService.LoginAsync(dto);
 
-            if (user == null)
+            if (!success)
             {
-                return new BadRequestObjectResult(new { message = "User not found! Please sign up!" });
+                return Unauthorized(new { message });
             }
-
-            if (user.Password != model.Password)
-            {
-                return new BadRequestObjectResult(new { message = "Password Incorrect! Please try again!" });
-            }
-
-            var roles = await roleRepo.GetAll();
-            var role = roles.Where(r => r.Id == user.RoleId).FirstOrDefault();
-
-            var token = GenerateToken(user.Id, user.Email, role.Name);
-            return Ok(new AuthTokenDto()
-            {
-                Id = user.Id,
-                Email = user.Email,
-                Role = user.Role.Name,
-                Token = token
-            });
+            return Ok(data);
         }
 
-        private string GenerateToken(int userId, string email, string role)
+        [HttpPost("register-candidate")]
+        [AllowAnonymous]
+        public async Task<IActionResult> RegisterCandidate([FromBody] CandidateSelfRegisterDto dto)
         {
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("163f10144207a3d1950e6fb4b59a128e"));
-            var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-            var claims = new[]
-            {
-                new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
-                new Claim(ClaimTypes.Name, email),
-                new Claim(ClaimTypes.Role, role)
-            };
-            var token = new JwtSecurityToken(
-                claims: claims,
-                expires: DateTime.UtcNow.AddHours(1),
-                signingCredentials: credentials
-             );
+            var (success, message) = await _userService.RegisterCandidateAsync(dto);
 
-            return new JwtSecurityTokenHandler().WriteToken(token);
+            if (!success)
+            {
+                return BadRequest(new { message });
+            }
+            return Ok(new { message });
+        }
+
+        [HttpPost("verify-otp")]
+        [AllowAnonymous]
+        public async Task<IActionResult> VerifyOtp([FromBody] VerifyOtpDto dto)
+        {
+            var (success, message, data) = await _userService.VerifyCandidateEmailAsync(dto);
+
+            if (!success)
+            {
+                return BadRequest(new { message });
+            }
+            return Ok(data);
+        }
+
+        [HttpPost("create-candidate-by-recruiter")]
+        [Authorize(Roles = "Admin,Recruiter")]
+        public async Task<IActionResult> CreateCandidateByRecruiter([FromBody] RecruiterCreateCandidateDto dto)
+        {
+            var recruiterId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var (success, message) = await _userService.CreateCandidateByRecruiterAsync(dto, recruiterId);
+
+            if (!success)
+            {
+                return BadRequest(new { message });
+            }
+            return Ok(new { message });
+        }
+
+        [HttpPost("set-password")]
+        [AllowAnonymous]
+        public async Task<IActionResult> SetPassword([FromBody] SetPasswordDto dto)
+        {
+            var (success, message) = await _userService.SetPasswordFromTokenAsync(dto);
+            if (!success)
+            {
+                return BadRequest(new { message });
+            }
+            return Ok(new { message });
         }
     }
 }

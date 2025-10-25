@@ -5,6 +5,8 @@ using Microsoft.IdentityModel.Tokens;
 using recruitlab.server.Data;
 using Server.Data;
 using Server.Model.Entities;
+using recruitlab.server.Services.Interface;
+using recruitlab.server.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,7 +35,7 @@ builder.Services.AddSwaggerGen(c =>
     //JWT Authentication to Swagger
     c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
     {
-        Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
+        Description = "JWT Authorization header using the Bearer scheme.",
         Name = "Authorization",
         In = Microsoft.OpenApi.Models.ParameterLocation.Header,
         Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
@@ -62,41 +64,36 @@ builder.Services.AddDbContext<AppDbContext>(option =>
     option.UseSqlServer("name=DefaultConnection");
 });
 
-//DI for IRepository
-builder.Services.AddScoped<IRepository<User>, Repository<User>>();
-builder.Services.AddScoped<IRepository<Role>, Repository<Role>>();
+//DI for Repository and services
 builder.Services.AddScoped<IRepository<JobOpening>, Repository<JobOpening>>();
 builder.Services.AddScoped<IRepository<Skill>, Repository<Skill>>();
 builder.Services.AddScoped<IRepository<SkillCategory>, Repository<SkillCategory>>();
+builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 builder.Services.AddScoped<IRepository<JobSkill>, Repository<JobSkill>>();
-builder.Services.AddScoped<IRepository<Candidate>, Repository<Candidate>>();
-builder.Services.AddScoped<IRepository<CandidateSkill>, Repository<CandidateSkill>>();
-builder.Services.AddScoped<IRepository<CandidateCV>, Repository<CandidateCV>>();
-builder.Services.AddScoped<IRepository<CandidateJobMatch>, Repository<CandidateJobMatch>>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IUserService, UserService>();
 
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
 {
-    options.TokenValidationParameters = new TokenValidationParameters()
+    options.TokenValidationParameters = new TokenValidationParameters
     {
-        ValidateIssuer = false,
-        ValidateAudience = false,
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("163f10144207a3d1950e6fb4b59a128e"))
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
+                builder.Configuration["Jwt:Key"]!
+            ))
     };
 });
 
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
-
-//Data Seeding
-using (var scope = app.Services.CreateScope())
-{
-    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    var dataSeedHelper = new DataSeedHelper(dbContext);
-    dataSeedHelper.InsertData();
-}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

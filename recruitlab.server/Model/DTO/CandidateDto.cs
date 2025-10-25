@@ -1,114 +1,109 @@
-namespace Server.Model.DTO
+﻿namespace recruitlab.server.Model.DTO
 {
-    public class CandidateDto
+    public class CandidateListDto
     {
         public int Id { get; set; }
-        public string FirstName { get; set; }
-        public string LastName { get; set; }
-        public string FullName => $"{FirstName} {LastName}";
-        public string Email { get; set; }
+        public int UserId { get; set; }
+        public string FirstName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
         public string? PhoneNumber { get; set; }
-        public string? Address { get; set; }
-        public string? City { get; set; }
-        public string? State { get; set; }
-        public string? Country { get; set; }
-        public string? PostalCode { get; set; }
-        public DateTime? DateOfBirth { get; set; }
         public string? CurrentPosition { get; set; }
         public string? CurrentCompany { get; set; }
-        public decimal? CurrentSalary { get; set; }
-        public decimal? ExpectedSalary { get; set; }
-        public string? ExperienceSummary { get; set; }
-        public string? Education { get; set; }
-        public string? Certifications { get; set; }
-        public string? Languages { get; set; }
-        public string? Notes { get; set; }
-        public string? LinkedInProfile { get; set; }
-        public string? PortfolioUrl { get; set; }
-        public int Status { get; set; }
-        public string StatusName { get; set; }
-        public int Source { get; set; }
-        public string SourceName { get; set; }
-        public string? SourceDetails { get; set; }
+        public bool IsAvailable { get; set; }
+        public string Source { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
-        public DateTime? UpdatedAt { get; set; }
-        public int CreatedByUserId { get; set; }
-        public string CreatedByUserEmail { get; set; }
-        public DateTime? LastContactDate { get; set; }
-        public string? LastContactNotes { get; set; }
+        public List<string> Skills { get; set; } = new List<string>();
+    }
+
+    // For the detailed GET /api/candidate/{id}
+    public class CandidateProfileDto
+    {
+        public int Id { get; set; }
+        public int UserId { get; set; }
+        public string FirstName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string? PhoneNumber { get; set; }
+        public string? LinkedInProfile { get; set; }
+        public string? PortfolioUrl { get; set; }
+        public decimal? CurrentSalary { get; set; }
+        public decimal? ExpectedSalary { get; set; }
+        public string? Certifications { get; set; }
+        public string? Languages { get; set; }
+        public string? Notes { get; set; }
+        public string Source { get; set; } = string.Empty;
+        public string? SourceDetails { get; set; }
         public bool IsAvailable { get; set; }
         public DateTime? AvailableFromDate { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public string CreatedBy { get; set; } = string.Empty;
+
         public List<CandidateSkillDto> CandidateSkills { get; set; } = new List<CandidateSkillDto>();
-        public List<CandidateCVDto> CandidateCVs { get; set; } = new List<CandidateCVDto>();
-        public List<CandidateJobMatchDto> CandidateJobMatches { get; set; } = new List<CandidateJobMatchDto>();
+        public List<EducationDto> EducationHistory { get; set; } = new List<EducationDto>();
+        public List<ExperienceDto> ExperienceHistory { get; set; } = new List<ExperienceDto>();
+        public List<DocumentDto> Documents { get; set; } = new List<DocumentDto>();
     }
 
-    public class CreateCandidateDto
+    // --- Sub-DTOs ---
+
+    public class CandidateSkillDto
     {
-        public string FirstName { get; set; }
-        public string LastName { get; set; }
-        public string Email { get; set; }
-        public string? PhoneNumber { get; set; }
-        public string? Address { get; set; }
-        public string? City { get; set; }
-        public string? State { get; set; }
-        public string? Country { get; set; }
-        public string? PostalCode { get; set; }
-        public DateTime? DateOfBirth { get; set; }
-        public string? CurrentPosition { get; set; }
-        public string? CurrentCompany { get; set; }
-        public decimal? CurrentSalary { get; set; }
-        public decimal? ExpectedSalary { get; set; }
-        public string? ExperienceSummary { get; set; }
-        public string? Education { get; set; }
-        public string? Certifications { get; set; }
-        public string? Languages { get; set; }
+        public int Id { get; set; }
+        public int CandidateId { get; set; }
+        public int SkillId { get; set; }
+        public string SkillName { get; set; } = string.Empty;
+        public string SkillCategoryName { get; set; } = string.Empty;
+        public int Level { get; set; }
+        public string LevelName { get; set; } = string.Empty;
+        public int? YearsOfExperience { get; set; }
         public string? Notes { get; set; }
-        public string? LinkedInProfile { get; set; }
-        public string? PortfolioUrl { get; set; }
-        public int Source { get; set; } = 1;
-        public string? SourceDetails { get; set; }
-        public bool IsAvailable { get; set; } = true;
-        public DateTime? AvailableFromDate { get; set; }
-        public List<CreateCandidateSkillDto> CandidateSkills { get; set; } = new List<CreateCandidateSkillDto>();
+        public DateTime LastUsed { get; set; }
+        public bool IsVerified { get; set; }
     }
 
-    public class UpdateCandidateDto
+    public class EducationDto
     {
-        public string FirstName { get; set; }
-        public string LastName { get; set; }
-        public string Email { get; set; }
-        public string? PhoneNumber { get; set; }
-        public string? Address { get; set; }
-        public string? City { get; set; }
-        public string? State { get; set; }
-        public string? Country { get; set; }
-        public string? PostalCode { get; set; }
-        public DateTime? DateOfBirth { get; set; }
-        public string? CurrentPosition { get; set; }
-        public string? CurrentCompany { get; set; }
-        public decimal? CurrentSalary { get; set; }
-        public decimal? ExpectedSalary { get; set; }
-        public string? ExperienceSummary { get; set; }
-        public string? Education { get; set; }
-        public string? Certifications { get; set; }
-        public string? Languages { get; set; }
+        public int Id { get; set; }
+        public string SchoolName { get; set; } = string.Empty;
+        public string Degree { get; set; } = string.Empty;
+        public string FieldOfStudy { get; set; } = string.Empty;
+        public DateTime StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+        public bool IsCurrent { get; set; }
+    }
+
+    public class ExperienceDto
+    {
+        public int Id { get; set; }
+        public string Position { get; set; } = string.Empty;
+        public string CompanyName { get; set; } = string.Empty;
+        public string? Location { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+        public bool IsCurrent { get; set; }
+        public string? Responsibilities { get; set; }
+    }
+
+    public class DocumentDto
+    {
+        public int Id { get; set; }
+        public string FileName { get; set; } = string.Empty;
+        public string FilePath { get; set; } = string.Empty;
+        public string FileType { get; set; } = string.Empty;
+        public string Type { get; set; } = string.Empty;
+        public DateTime UploadedAt { get; set; }
+    }
+
+    // DTO for POST /api/candidate/{id}/skills
+    public class CreateCandidateSkillDto
+    {
+        public int CandidateId { get; set; }
+        public int SkillId { get; set; }
+        public int Level { get; set; }
+        public int? YearsOfExperience { get; set; }
         public string? Notes { get; set; }
-        public string? LinkedInProfile { get; set; }
-        public string? PortfolioUrl { get; set; }
-        public int Status { get; set; }
-        public int Source { get; set; }
-        public string? SourceDetails { get; set; }
-        public DateTime? LastContactDate { get; set; }
-        public string? LastContactNotes { get; set; }
-        public bool IsAvailable { get; set; }
-        public DateTime? AvailableFromDate { get; set; }
-    }
-
-    public class BulkCreateCandidateDto
-    {
-        public string Source { get; set; } = "Excel Import";
-        public string? SourceDetails { get; set; }
-        public List<CreateCandidateDto> Candidates { get; set; } = new List<CreateCandidateDto>();
+        public DateTime LastUsed { get; set; }
+        public bool IsVerified { get; set; }
     }
 }

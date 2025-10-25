@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using recruitlab.server.Data;
+using recruitlab.server.Model.DTO;
 using Server.Data;
 using Server.Model.DTO;
 using Server.Model.Entities;
@@ -14,47 +15,37 @@ namespace Server.Controllers
     [Authorize]
     public class CandidateController : ControllerBase
     {
-        private readonly IRepository<Candidate> candidateRepo;
-        private readonly IRepository<CandidateSkill> candidateSkillRepo;
-        private readonly IRepository<Skill> skillRepo;
-        private readonly IRepository<User> userRepo;
-        private readonly AppDbContext dbContext;
+        private readonly IRepository<Candidate> _candidateRepo;
+        private readonly IRepository<CandidateSkill> _candidateSkillRepo;
+        private readonly IRepository<Skill> _skillRepo;
+        private readonly AppDbContext _context;
 
         public CandidateController(
             IRepository<Candidate> candidateRepo,
             IRepository<CandidateSkill> candidateSkillRepo,
             IRepository<Skill> skillRepo,
-            IRepository<User> userRepo,
             AppDbContext dbContext)
         {
-            this.candidateRepo = candidateRepo;
-            this.candidateSkillRepo = candidateSkillRepo;
-            this.skillRepo = skillRepo;
-            this.userRepo = userRepo;
-            this.dbContext = dbContext;
+            _candidateRepo = candidateRepo;
+            _candidateSkillRepo = candidateSkillRepo;
+            _skillRepo = skillRepo;
+            _context = dbContext;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetAllCandidates(
-            [FromQuery] int? status = null,
             [FromQuery] int? source = null,
             [FromQuery] bool? isAvailable = null,
             [FromQuery] string? search = null,
             [FromQuery] int page = 1,
             [FromQuery] int pageSize = 20)
         {
-            var query = dbContext.Candidates
-                .Include(c => c.CreatedByUser)
-                .Include(c => c.CandidateSkills)
-                    .ThenInclude(cs => cs.Skill)
-                        .ThenInclude(s => s.SkillCategory)
-                .Include(c => c.CandidateCVs.Where(cv => cv.IsActive))
-                .Include(c => c.CandidateJobMatches.Where(cjm => cjm.IsActive))
+            var query = _context.Candidates
+                .Include(c => c.User)
+                .Include(c => c.CreatedByUser.Role)
+                .Include(c => c.CandidateSkills).ThenInclude(cs => cs.Skill)
+                .Include(c => c.ExperienceHistory)
                 .AsQueryable();
-
-            // Apply filters
-            if (status.HasValue)
-                query = query.Where(c => (int)c.Status == status.Value);
 
             if (source.HasValue)
                 query = query.Where(c => (int)c.Source == source.Value);
@@ -64,15 +55,15 @@ namespace Server.Controllers
 
             if (!string.IsNullOrEmpty(search))
             {
+                var s = search.ToLower();
                 query = query.Where(c =>
-                    c.FirstName.Contains(search) ||
-                    c.LastName.Contains(search) ||
-                    c.Email.Contains(search) ||
-                    c.CurrentPosition.Contains(search) ||
-                    c.CurrentCompany.Contains(search));
+                    c.User.FirstName.ToLower().Contains(s) ||
+                    c.User.LastName.ToLower().Contains(s) ||
+                    c.User.Email.ToLower().Contains(s) ||
+                    c.ExperienceHistory.Any(e => e.Position.ToLower().Contains(s) || e.CompanyName.ToLower().Contains(s))
+                );
             }
 
-            // Apply pagination
             var totalCount = await query.CountAsync();
             var candidates = await query
                 .OrderByDescending(c => c.CreatedAt)
@@ -80,219 +71,73 @@ namespace Server.Controllers
                 .Take(pageSize)
                 .ToListAsync();
 
-            var candidateDtos = candidates.Select(MapToCandidateDto).ToList();
+            var candidateDtos = candidates.Select(MapToCandidateListDto).ToList();
 
             return Ok(new
             {
                 Candidates = candidateDtos,
                 TotalCount = totalCount,
                 Page = page,
-                PageSize = pageSize,
-                TotalPages = (int)Math.Ceiling((double)totalCount / pageSize)
+                PageSize = pageSize
             });
         }
 
         [HttpGet("{id}")]
+        [Authorize(Roles = "Admin,Recruiter,HR,Interviewer")]
         public async Task<IActionResult> GetCandidate(int id)
         {
-            var candidate = await dbContext.Candidates
+            var candidate = await _context.Candidates
+                .Include(c => c.User)
                 .Include(c => c.CreatedByUser)
-                .Include(c => c.CandidateSkills)
-                    .ThenInclude(cs => cs.Skill)
-                        .ThenInclude(s => s.SkillCategory)
-                .Include(c => c.CandidateCVs)
-                .Include(c => c.CandidateJobMatches)
-                    .ThenInclude(cjm => cjm.JobOpening)
+                .Include(c => c.CandidateSkills).ThenInclude(cs => cs.Skill).ThenInclude(s => s.SkillCategory)
+                .Include(c => c.EducationHistory)
+                .Include(c => c.ExperienceHistory)
+                .Include(c => c.Documents)
                 .FirstOrDefaultAsync(c => c.Id == id);
 
             if (candidate == null)
                 return NotFound(new { message = "Candidate not found" });
 
-            return Ok(MapToCandidateDto(candidate));
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> CreateCandidate([FromBody] Model.DTO.CreateCandidateDto dto)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            var userId = GetCurrentUserId();
-            if (userId == null)
-                return Unauthorized();
-
-            // Check if candidate with same email already exists
-            var existingCandidate = await dbContext.Candidates
-    .FirstOrDefaultAsync(c => c.Email == dto.Email);
-            if (existingCandidate != null)
-                return BadRequest(new { message = "A candidate with this email already exists" });
-
-            var candidate = new Candidate
-            {
-                FirstName = dto.FirstName,
-                LastName = dto.LastName,
-                Email = dto.Email,
-                PhoneNumber = dto.PhoneNumber,
-                Address = dto.Address,
-                City = dto.City,
-                State = dto.State,
-                Country = dto.Country,
-                PostalCode = dto.PostalCode,
-                DateOfBirth = dto.DateOfBirth,
-                CurrentPosition = dto.CurrentPosition,
-                CurrentCompany = dto.CurrentCompany,
-                CurrentSalary = dto.CurrentSalary,
-                ExpectedSalary = dto.ExpectedSalary,
-                ExperienceSummary = dto.ExperienceSummary,
-                Education = dto.Education,
-                Certifications = dto.Certifications,
-                Languages = dto.Languages,
-                Notes = dto.Notes,
-                LinkedInProfile = dto.LinkedInProfile,
-                PortfolioUrl = dto.PortfolioUrl,
-                Source = (CandidateSource)dto.Source,
-                SourceDetails = dto.SourceDetails,
-                IsAvailable = dto.IsAvailable,
-                AvailableFromDate = dto.AvailableFromDate,
-                CreatedByUserId = userId.Value,
-                Status = CandidateStatus.Active
-            };
-
-            await candidateRepo.AddAsync(candidate);
-            await candidateRepo.SaveChangesAsync();
-
-            foreach (var skillDto in dto.CandidateSkills)
-            {
-                var candidateSkill = new CandidateSkill
-                {
-                    CandidateId = candidate.Id,
-                    SkillId = skillDto.SkillId,
-                    Level = (SkillLevel)skillDto.Level,
-                    YearsOfExperience = skillDto.YearsOfExperience,
-                    Notes = skillDto.Notes,
-                    LastUsed = skillDto.LastUsed,
-                    IsVerified = skillDto.IsVerified
-                };
-                await candidateSkillRepo.AddAsync(candidateSkill);
-            }
-
-            await candidateRepo.SaveChangesAsync();
-
-            var createdCandidate = await dbContext.Candidates
-                .Include(c => c.CreatedByUser)
-                .Include(c => c.CandidateSkills)
-                    .ThenInclude(cs => cs.Skill)
-                        .ThenInclude(s => s.SkillCategory)
-                .FirstOrDefaultAsync(c => c.Id == candidate.Id);
-
-            return CreatedAtAction(nameof(GetCandidate), new { id = candidate.Id }, MapToCandidateDto(createdCandidate));
-        }
-
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateCandidate(int id, [FromBody] UpdateCandidateDto dto)
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
-            var candidate = await candidateRepo.FindByIdAsync(id);
-            if (candidate == null)
-                return NotFound(new { message = "Candidate not found" });
-
-            var userId = GetCurrentUserId();
-            if (userId == null)
-                return Unauthorized();
-
-            var userRole = GetCurrentUserRole();
-            if (candidate.CreatedByUserId != userId.Value && userRole != "Admin")
-                return Forbid();
-
-            if (candidate.Email != dto.Email)
-            {
-                var existingCandidate = await dbContext.Candidates
-    .FirstOrDefaultAsync(c => c.Email == dto.Email);
-                if (existingCandidate != null)
-                    return BadRequest(new { message = "A candidate with this email already exists" });
-            }
-
-            candidate.FirstName = dto.FirstName;
-            candidate.LastName = dto.LastName;
-            candidate.Email = dto.Email;
-            candidate.PhoneNumber = dto.PhoneNumber;
-            candidate.Address = dto.Address;
-            candidate.City = dto.City;
-            candidate.State = dto.State;
-            candidate.Country = dto.Country;
-            candidate.PostalCode = dto.PostalCode;
-            candidate.DateOfBirth = dto.DateOfBirth;
-            candidate.CurrentPosition = dto.CurrentPosition;
-            candidate.CurrentCompany = dto.CurrentCompany;
-            candidate.CurrentSalary = dto.CurrentSalary;
-            candidate.ExpectedSalary = dto.ExpectedSalary;
-            candidate.ExperienceSummary = dto.ExperienceSummary;
-            candidate.Education = dto.Education;
-            candidate.Certifications = dto.Certifications;
-            candidate.Languages = dto.Languages;
-            candidate.Notes = dto.Notes;
-            candidate.LinkedInProfile = dto.LinkedInProfile;
-            candidate.PortfolioUrl = dto.PortfolioUrl;
-            candidate.Status = (CandidateStatus)dto.Status;
-            candidate.Source = (CandidateSource)dto.Source;
-            candidate.SourceDetails = dto.SourceDetails;
-            candidate.LastContactDate = dto.LastContactDate;
-            candidate.LastContactNotes = dto.LastContactNotes;
-            candidate.IsAvailable = dto.IsAvailable;
-            candidate.AvailableFromDate = dto.AvailableFromDate;
-            candidate.UpdatedAt = DateTime.UtcNow;
-
-            candidateRepo.Update(candidate);
-            await candidateRepo.SaveChangesAsync();
-
-            var updatedCandidate = await dbContext.Candidates
-                .Include(c => c.CreatedByUser)
-                .Include(c => c.CandidateSkills)
-                    .ThenInclude(cs => cs.Skill)
-                        .ThenInclude(s => s.SkillCategory)
-                .FirstOrDefaultAsync(c => c.Id == id);
-
-            return Ok(MapToCandidateDto(updatedCandidate));
+            return Ok(MapToCandidateProfileDto(candidate));
         }
 
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin,Recruiter")]
         public async Task<IActionResult> DeleteCandidate(int id)
         {
-            var candidate = await candidateRepo.FindByIdAsync(id);
+            var candidate = await _candidateRepo.FindByIdAsync(id);
             if (candidate == null)
                 return NotFound(new { message = "Candidate not found" });
 
-            var userId = GetCurrentUserId();
-            if (userId == null)
-                return Unauthorized();
+            var user = await _context.Users.FindAsync(candidate.UserId);
+            if (user == null)
+                return NotFound(new { message = "Associated user not found" });
 
-            var userRole = GetCurrentUserRole();
-            if (candidate.CreatedByUserId != userId.Value && userRole != "Admin")
-                return Forbid();
-
-            await candidateRepo.DeleteAsync(id);
-            await candidateRepo.SaveChangesAsync();
+            _context.Users.Remove(user);
+            await _context.SaveChangesAsync();
 
             return NoContent();
         }
 
         [HttpPost("{id}/skills")]
+        [Authorize(Roles = "Admin,Recruiter")]
         public async Task<IActionResult> AddSkillToCandidate(int id, [FromBody] CreateCandidateSkillDto dto)
         {
-            var candidate = await candidateRepo.FindByIdAsync(id);
+            if (id != dto.CandidateId)
+                return BadRequest("Mismatched candidate ID");
+
+            var candidate = await _candidateRepo.FindByIdAsync(id);
             if (candidate == null)
                 return NotFound(new { message = "Candidate not found" });
 
-            var skill = await skillRepo.FindByIdAsync(dto.SkillId);
+            var skill = await _skillRepo.FindByIdAsync(dto.SkillId);
             if (skill == null)
                 return NotFound(new { message = "Skill not found" });
 
-            var existingCandidateSkill = await dbContext.CandidateSkills
+            var existingSkill = await _context.CandidateSkills
                 .FirstOrDefaultAsync(cs => cs.CandidateId == id && cs.SkillId == dto.SkillId);
 
-            if (existingCandidateSkill != null)
+            if (existingSkill != null)
                 return BadRequest(new { message = "Skill already added to this candidate" });
 
             var candidateSkill = new CandidateSkill
@@ -306,88 +151,13 @@ namespace Server.Controllers
                 IsVerified = dto.IsVerified
             };
 
-            await candidateSkillRepo.AddAsync(candidateSkill);
-            await candidateSkillRepo.SaveChangesAsync();
+            await _candidateSkillRepo.AddAsync(candidateSkill);
+            await _candidateSkillRepo.SaveChangesAsync();
 
-            return Ok(new { message = "Skill added to candidate successfully" });
+            return Ok(candidateSkill);
         }
 
-        [HttpPut("{id}/skills/{skillId}")]
-        public async Task<IActionResult> UpdateCandidateSkill(int id, int skillId, [FromBody] UpdateCandidateSkillDto dto)
-        {
-            var candidateSkill = await dbContext.CandidateSkills
-                .FirstOrDefaultAsync(cs => cs.CandidateId == id && cs.SkillId == skillId);
-
-            if (candidateSkill == null)
-                return NotFound(new { message = "Candidate skill not found" });
-
-            candidateSkill.Level = (SkillLevel)dto.Level;
-            candidateSkill.YearsOfExperience = dto.YearsOfExperience;
-            candidateSkill.Notes = dto.Notes;
-            candidateSkill.LastUsed = dto.LastUsed;
-            candidateSkill.IsVerified = dto.IsVerified;
-            candidateSkill.UpdatedAt = DateTime.UtcNow;
-
-            candidateSkillRepo.Update(candidateSkill);
-            await candidateSkillRepo.SaveChangesAsync();
-
-            return Ok(new { message = "Candidate skill updated successfully" });
-        }
-
-        [HttpDelete("{id}/skills/{skillId}")]
-        public async Task<IActionResult> RemoveSkillFromCandidate(int id, int skillId)
-        {
-            var candidateSkill = await dbContext.CandidateSkills
-                .FirstOrDefaultAsync(cs => cs.CandidateId == id && cs.SkillId == skillId);
-
-            if (candidateSkill == null)
-                return NotFound(new { message = "Candidate skill not found" });
-
-            await candidateSkillRepo.DeleteAsync(candidateSkill.Id);
-            await candidateSkillRepo.SaveChangesAsync();
-
-            return Ok(new { message = "Skill removed from candidate successfully" });
-        }
-
-        [HttpGet("status/{status}")]
-        public async Task<IActionResult> GetCandidatesByStatus(int status)
-        {
-            var candidates = await dbContext.Candidates
-                .Include(c => c.CreatedByUser)
-                .Include(c => c.CandidateSkills)
-                    .ThenInclude(cs => cs.Skill)
-                        .ThenInclude(s => s.SkillCategory)
-                .Where(c => (int)c.Status == status)
-                .ToListAsync();
-
-            var candidateDtos = candidates.Select(MapToCandidateDto).ToList();
-            return Ok(candidateDtos);
-        }
-
-        [HttpGet("search")]
-        public async Task<IActionResult> SearchCandidates([FromQuery] string query)
-        {
-            if (string.IsNullOrEmpty(query))
-                return BadRequest(new { message = "Search query is required" });
-
-            var candidates = await dbContext.Candidates
-                .Include(c => c.CreatedByUser)
-                .Include(c => c.CandidateSkills)
-                    .ThenInclude(cs => cs.Skill)
-                        .ThenInclude(s => s.SkillCategory)
-                .Where(c =>
-                    c.FirstName.Contains(query) ||
-                    c.LastName.Contains(query) ||
-                    c.Email.Contains(query) ||
-                    c.CurrentPosition.Contains(query) ||
-                    c.CurrentCompany.Contains(query) ||
-                    c.ExperienceSummary.Contains(query))
-                .Take(50) // Limit results
-                .ToListAsync();
-
-            var candidateDtos = candidates.Select(MapToCandidateDto).ToList();
-            return Ok(candidateDtos);
-        }
+        // Add other endpoints for Education, Experience, etc. here
 
         private int? GetCurrentUserId()
         {
@@ -397,51 +167,52 @@ namespace Server.Controllers
             return null;
         }
 
-        private string GetCurrentUserRole()
+        // --- MAPPERS ---
+
+        private CandidateListDto MapToCandidateListDto(Candidate c)
         {
-            return User.FindFirst(ClaimTypes.Role)?.Value ?? "";
+            var currentExp = c.ExperienceHistory.FirstOrDefault(e => e.IsCurrent);
+            return new CandidateListDto
+            {
+                Id = c.Id,
+                UserId = c.UserId,
+                FirstName = c.User.FirstName,
+                LastName = c.User.LastName,
+                Email = c.User.Email,
+                PhoneNumber = c.User.PhoneNumber,
+                CurrentPosition = currentExp?.Position,
+                CurrentCompany = currentExp?.CompanyName,
+                IsAvailable = c.IsAvailable,
+                Source = c.Source.ToString(),
+                CreatedAt = c.CreatedAt,
+                Skills = c.CandidateSkills.Select(cs => cs.Skill.Name).ToList()
+            };
         }
 
-        private CandidateDto MapToCandidateDto(Candidate candidate)
+        private CandidateProfileDto MapToCandidateProfileDto(Candidate c)
         {
-            return new CandidateDto
+            return new CandidateProfileDto
             {
-                Id = candidate.Id,
-                FirstName = candidate.FirstName,
-                LastName = candidate.LastName,
-                Email = candidate.Email,
-                PhoneNumber = candidate.PhoneNumber,
-                Address = candidate.Address,
-                City = candidate.City,
-                State = candidate.State,
-                Country = candidate.Country,
-                PostalCode = candidate.PostalCode,
-                DateOfBirth = candidate.DateOfBirth,
-                CurrentPosition = candidate.CurrentPosition,
-                CurrentCompany = candidate.CurrentCompany,
-                CurrentSalary = candidate.CurrentSalary,
-                ExpectedSalary = candidate.ExpectedSalary,
-                ExperienceSummary = candidate.ExperienceSummary,
-                Education = candidate.Education,
-                Certifications = candidate.Certifications,
-                Languages = candidate.Languages,
-                Notes = candidate.Notes,
-                LinkedInProfile = candidate.LinkedInProfile,
-                PortfolioUrl = candidate.PortfolioUrl,
-                Status = (int)candidate.Status,
-                StatusName = candidate.Status.ToString(),
-                Source = (int)candidate.Source,
-                SourceName = candidate.Source.ToString(),
-                SourceDetails = candidate.SourceDetails,
-                CreatedAt = candidate.CreatedAt,
-                UpdatedAt = candidate.UpdatedAt,
-                CreatedByUserId = candidate.CreatedByUserId,
-                CreatedByUserEmail = candidate.CreatedByUser?.Email ?? "",
-                LastContactDate = candidate.LastContactDate,
-                LastContactNotes = candidate.LastContactNotes,
-                IsAvailable = candidate.IsAvailable,
-                AvailableFromDate = candidate.AvailableFromDate,
-                CandidateSkills = candidate.CandidateSkills.Select(cs => new CandidateSkillDto
+                Id = c.Id,
+                UserId = c.UserId,
+                FirstName = c.User.FirstName,
+                LastName = c.User.LastName,
+                Email = c.User.Email,
+                PhoneNumber = c.User.PhoneNumber,
+                LinkedInProfile = c.LinkedInProfile,
+                PortfolioUrl = c.PortfolioUrl,
+                CurrentSalary = c.CurrentSalary,
+                ExpectedSalary = c.ExpectedSalary,
+                Certifications = c.Certifications,
+                Languages = c.Languages,
+                Notes = c.Notes,
+                Source = c.Source.ToString(),
+                SourceDetails = c.SourceDetails,
+                IsAvailable = c.IsAvailable,
+                AvailableFromDate = c.AvailableFromDate,
+                CreatedAt = c.CreatedAt,
+                CreatedBy = c.CreatedByUser.Email,
+                CandidateSkills = c.CandidateSkills.Select(cs => new CandidateSkillDto
                 {
                     Id = cs.Id,
                     CandidateId = cs.CandidateId,
@@ -453,57 +224,37 @@ namespace Server.Controllers
                     YearsOfExperience = cs.YearsOfExperience,
                     Notes = cs.Notes,
                     LastUsed = cs.LastUsed,
-                    IsVerified = cs.IsVerified,
-                    CreatedAt = cs.CreatedAt,
-                    UpdatedAt = cs.UpdatedAt
+                    IsVerified = cs.IsVerified
                 }).ToList(),
-                CandidateCVs = candidate.CandidateCVs.Select(cv => new CandidateCVDto
+                EducationHistory = c.EducationHistory.Select(e => new EducationDto
                 {
-                    Id = cv.Id,
-                    CandidateId = cv.CandidateId,
-                    FileName = cv.FileName,
-                    FilePath = cv.FilePath,
-                    FileType = cv.FileType,
-                    FileSize = cv.FileSize,
-                    Type = (int)cv.Type,
-                    TypeName = cv.Type.ToString(),
-                    Status = (int)cv.Status,
-                    StatusName = cv.Status.ToString(),
-                    ParsedContent = cv.ParsedContent,
-                    ParsedSkills = cv.ParsedSkills,
-                    ParsedExperience = cv.ParsedExperience,
-                    ParsedEducation = cv.ParsedEducation,
-                    ProcessingNotes = cv.ProcessingNotes,
-                    UploadedAt = cv.UploadedAt,
-                    ProcessedAt = cv.ProcessedAt,
-                    UploadedByUserId = cv.UploadedByUserId,
-                    UploadedByUserEmail = cv.UploadedByUser?.Email ?? "",
-                    IsActive = cv.IsActive
+                    Id = e.Id,
+                    SchoolName = e.SchoolName,
+                    Degree = e.Degree,
+                    FieldOfStudy = e.FieldOfStudy,
+                    StartDate = e.StartDate,
+                    EndDate = e.EndDate,
+                    IsCurrent = e.IsCurrent
                 }).ToList(),
-                CandidateJobMatches = candidate.CandidateJobMatches.Select(cjm => new CandidateJobMatchDto
+                ExperienceHistory = c.ExperienceHistory.Select(e => new ExperienceDto
                 {
-                    Id = cjm.Id,
-                    CandidateId = cjm.CandidateId,
-                    CandidateName = $"{candidate.FirstName} {candidate.LastName}",
-                    CandidateEmail = candidate.Email,
-                    JobOpeningId = cjm.JobOpeningId,
-                    JobTitle = cjm.JobOpening?.Title ?? "",
-                    JobDepartment = cjm.JobOpening?.Department ?? "",
-                    Status = (int)cjm.Status,
-                    StatusName = cjm.Status.ToString(),
-                    MatchScore = cjm.MatchScore,
-                    MatchDetails = cjm.MatchDetails,
-                    Notes = cjm.Notes,
-                    MatchedAt = cjm.MatchedAt,
-                    StatusUpdatedAt = cjm.StatusUpdatedAt,
-                    MatchedByUserId = cjm.MatchedByUserId,
-                    MatchedByUserEmail = cjm.MatchedByUser?.Email ?? "",
-                    InterviewScheduledAt = cjm.InterviewScheduledAt,
-                    InterviewNotes = cjm.InterviewNotes,
-                    OfferedSalary = cjm.OfferedSalary,
-                    OfferDate = cjm.OfferDate,
-                    ResponseDeadline = cjm.ResponseDeadline,
-                    IsActive = cjm.IsActive
+                    Id = e.Id,
+                    Position = e.Position,
+                    CompanyName = e.CompanyName,
+                    Location = e.Location,
+                    StartDate = e.StartDate,
+                    EndDate = e.EndDate,
+                    IsCurrent = e.IsCurrent,
+                    Responsibilities = e.Responsibilities
+                }).ToList(),
+                Documents = c.Documents.Select(d => new DocumentDto
+                {
+                    Id = d.Id,
+                    FileName = d.FileName,
+                    FilePath = d.FilePath,
+                    FileType = d.FileType,
+                    Type = d.Type.ToString(),
+                    UploadedAt = d.UploadedAt
                 }).ToList()
             };
         }

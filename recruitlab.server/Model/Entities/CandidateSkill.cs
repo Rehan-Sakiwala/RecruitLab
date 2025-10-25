@@ -20,8 +20,6 @@ namespace Server.Model.Entities
         public bool IsVerified { get; set; } = false; 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
-
-        // Navigation properties
         public Candidate Candidate { get; set; }
         public Skill Skill { get; set; }
     }

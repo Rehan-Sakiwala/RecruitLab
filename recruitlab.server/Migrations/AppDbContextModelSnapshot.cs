@@ -30,19 +30,10 @@ namespace recruitlab.server.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Address")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<DateTime?>("AvailableFromDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Certifications")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("City")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Country")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreatedAt")
@@ -51,34 +42,11 @@ namespace recruitlab.server.Migrations
                     b.Property<int>("CreatedByUserId")
                         .HasColumnType("int");
 
-                    b.Property<string>("CurrentCompany")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CurrentPosition")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<decimal?>("CurrentSalary")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<DateTime?>("DateOfBirth")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Education")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<decimal?>("ExpectedSalary")
                         .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("ExperienceSummary")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("FirstName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsAvailable")
                         .HasColumnType("bit");
@@ -92,23 +60,13 @@ namespace recruitlab.server.Migrations
                     b.Property<string>("LastContactNotes")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("LastName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("LinkedInProfile")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Notes")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("PhoneNumber")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("PortfolioUrl")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PostalCode")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Source")
@@ -117,156 +75,20 @@ namespace recruitlab.server.Migrations
                     b.Property<string>("SourceDetails")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("State")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
                     b.HasIndex("CreatedByUserId");
 
-                    b.ToTable("Candidates");
-                });
-
-            modelBuilder.Entity("Server.Model.Entities.CandidateCV", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("CandidateId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("FileName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("FilePath")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<long>("FileSize")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("FileType")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("ParsedContent")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ParsedEducation")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ParsedExperience")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ParsedSkills")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("ProcessedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("ProcessingNotes")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Type")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("UploadedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("UploadedByUserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CandidateId");
-
-                    b.HasIndex("UploadedByUserId");
-
-                    b.ToTable("CandidateCVs");
-                });
-
-            modelBuilder.Entity("Server.Model.Entities.CandidateJobMatch", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("CandidateId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("InterviewNotes")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("InterviewScheduledAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("JobOpeningId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("MatchDetails")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("MatchScore")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<DateTime>("MatchedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("MatchedByUserId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Notes")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("OfferDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<decimal?>("OfferedSalary")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<DateTime?>("ResponseDeadline")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("StatusUpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("Type")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("JobOpeningId");
-
-                    b.HasIndex("MatchedByUserId");
-
-                    b.HasIndex("CandidateId", "JobOpeningId")
+                    b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("CandidateJobMatches");
+                    b.ToTable("Candidates");
                 });
 
             modelBuilder.Entity("Server.Model.Entities.CandidateSkill", b =>
@@ -306,12 +128,88 @@ namespace recruitlab.server.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CandidateId");
+
                     b.HasIndex("SkillId");
 
-                    b.HasIndex("CandidateId", "SkillId")
-                        .IsUnique();
-
                     b.ToTable("CandidateSkills");
+                });
+
+            modelBuilder.Entity("Server.Model.Entities.Document", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CandidateId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FilePath")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FileType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UploadedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CandidateId");
+
+                    b.ToTable("Documents");
+                });
+
+            modelBuilder.Entity("Server.Model.Entities.Experience", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CandidateId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CompanyName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("EndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsCurrent")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Location")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Position")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Responsibilities")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CandidateId");
+
+                    b.ToTable("Experiences");
                 });
 
             modelBuilder.Entity("Server.Model.Entities.JobOpening", b =>
@@ -391,10 +289,9 @@ namespace recruitlab.server.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("SkillId");
+                    b.HasIndex("JobOpeningId");
 
-                    b.HasIndex("JobOpeningId", "SkillId")
-                        .IsUnique();
+                    b.HasIndex("SkillId");
 
                     b.ToTable("JobSkills");
                 });
@@ -414,6 +311,33 @@ namespace recruitlab.server.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Roles");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Name = "Admin"
+                        },
+                        new
+                        {
+                            Id = 2,
+                            Name = "Recruiter"
+                        },
+                        new
+                        {
+                            Id = 3,
+                            Name = "HR"
+                        },
+                        new
+                        {
+                            Id = 4,
+                            Name = "Interviewer"
+                        },
+                        new
+                        {
+                            Id = 5,
+                            Name = "Candidate"
+                        });
                 });
 
             modelBuilder.Entity("Server.Model.Entities.Skill", b =>
@@ -477,22 +401,145 @@ namespace recruitlab.server.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("FirstName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Password")
+                    b.Property<string>("LastName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("OtpExpiry")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PasswordResetToken")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ResetTokenExpiry")
+                        .HasColumnType("datetime2");
 
                     b.Property<int>("RoleId")
                         .HasColumnType("int");
 
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("VerificationOtp")
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
 
                     b.HasIndex("RoleId");
 
                     b.ToTable("Users");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CreatedAt = new DateTime(2025, 10, 25, 9, 24, 13, 907, DateTimeKind.Utc).AddTicks(8223),
+                            Email = "admin@recruitlab.dev",
+                            FirstName = "Admin",
+                            LastName = "1",
+                            PasswordHash = "$2a$11$LlyxzPGti7RRq/HYqTGTxOUy6vxTPXkleAvaGpFbYiwtUrLB1wAOy",
+                            RoleId = 1,
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = 2,
+                            CreatedAt = new DateTime(2025, 10, 25, 9, 24, 13, 907, DateTimeKind.Utc).AddTicks(8238),
+                            Email = "recruiter@recruitlab.dev",
+                            FirstName = "Recruiter",
+                            LastName = "1",
+                            PasswordHash = "$2a$11$LlyxzPGti7RRq/HYqTGTxOUy6vxTPXkleAvaGpFbYiwtUrLB1wAOy",
+                            RoleId = 2,
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = 3,
+                            CreatedAt = new DateTime(2025, 10, 25, 9, 24, 13, 907, DateTimeKind.Utc).AddTicks(8240),
+                            Email = "hr@recruitlab.dev",
+                            FirstName = "HR",
+                            LastName = "1",
+                            PasswordHash = "$2a$11$LlyxzPGti7RRq/HYqTGTxOUy6vxTPXkleAvaGpFbYiwtUrLB1wAOy",
+                            RoleId = 3,
+                            Status = 1
+                        },
+                        new
+                        {
+                            Id = 4,
+                            CreatedAt = new DateTime(2025, 10, 25, 9, 24, 13, 907, DateTimeKind.Utc).AddTicks(8242),
+                            Email = "interviewer@recruitlab.dev",
+                            FirstName = "Interviewer",
+                            LastName = "1",
+                            PasswordHash = "$2a$11$LlyxzPGti7RRq/HYqTGTxOUy6vxTPXkleAvaGpFbYiwtUrLB1wAOy",
+                            RoleId = 4,
+                            Status = 1
+                        });
+                });
+
+            modelBuilder.Entity("recruitlab.server.Model.Entities.Server.Model.Entities.Education", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CandidateId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Degree")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("EndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("FieldOfStudy")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsCurrent")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SchoolName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CandidateId");
+
+                    b.ToTable("Educations");
                 });
 
             modelBuilder.Entity("Server.Model.Entities.Candidate", b =>
@@ -503,52 +550,15 @@ namespace recruitlab.server.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("Server.Model.Entities.User", "User")
+                        .WithOne("CandidateProfile")
+                        .HasForeignKey("Server.Model.Entities.Candidate", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("CreatedByUser");
-                });
 
-            modelBuilder.Entity("Server.Model.Entities.CandidateCV", b =>
-                {
-                    b.HasOne("Server.Model.Entities.Candidate", "Candidate")
-                        .WithMany("CandidateCVs")
-                        .HasForeignKey("CandidateId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Server.Model.Entities.User", "UploadedByUser")
-                        .WithMany()
-                        .HasForeignKey("UploadedByUserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Candidate");
-
-                    b.Navigation("UploadedByUser");
-                });
-
-            modelBuilder.Entity("Server.Model.Entities.CandidateJobMatch", b =>
-                {
-                    b.HasOne("Server.Model.Entities.Candidate", "Candidate")
-                        .WithMany("CandidateJobMatches")
-                        .HasForeignKey("CandidateId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Server.Model.Entities.JobOpening", "JobOpening")
-                        .WithMany()
-                        .HasForeignKey("JobOpeningId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Server.Model.Entities.User", "MatchedByUser")
-                        .WithMany()
-                        .HasForeignKey("MatchedByUserId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("Candidate");
-
-                    b.Navigation("JobOpening");
-
-                    b.Navigation("MatchedByUser");
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Server.Model.Entities.CandidateSkill", b =>
@@ -562,7 +572,7 @@ namespace recruitlab.server.Migrations
                     b.HasOne("Server.Model.Entities.Skill", "Skill")
                         .WithMany()
                         .HasForeignKey("SkillId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Candidate");
@@ -570,12 +580,34 @@ namespace recruitlab.server.Migrations
                     b.Navigation("Skill");
                 });
 
+            modelBuilder.Entity("Server.Model.Entities.Document", b =>
+                {
+                    b.HasOne("Server.Model.Entities.Candidate", "Candidate")
+                        .WithMany("Documents")
+                        .HasForeignKey("CandidateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Candidate");
+                });
+
+            modelBuilder.Entity("Server.Model.Entities.Experience", b =>
+                {
+                    b.HasOne("Server.Model.Entities.Candidate", "Candidate")
+                        .WithMany("ExperienceHistory")
+                        .HasForeignKey("CandidateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Candidate");
+                });
+
             modelBuilder.Entity("Server.Model.Entities.JobOpening", b =>
                 {
                     b.HasOne("Server.Model.Entities.User", "CreatedByUser")
                         .WithMany()
                         .HasForeignKey("CreatedByUserId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("CreatedByUser");
@@ -592,7 +624,7 @@ namespace recruitlab.server.Migrations
                     b.HasOne("Server.Model.Entities.Skill", "Skill")
                         .WithMany("JobSkills")
                         .HasForeignKey("SkillId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("JobOpening");
@@ -605,7 +637,7 @@ namespace recruitlab.server.Migrations
                     b.HasOne("Server.Model.Entities.SkillCategory", "SkillCategory")
                         .WithMany("Skills")
                         .HasForeignKey("SkillCategoryId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("SkillCategory");
@@ -622,13 +654,26 @@ namespace recruitlab.server.Migrations
                     b.Navigation("Role");
                 });
 
+            modelBuilder.Entity("recruitlab.server.Model.Entities.Server.Model.Entities.Education", b =>
+                {
+                    b.HasOne("Server.Model.Entities.Candidate", "Candidate")
+                        .WithMany("EducationHistory")
+                        .HasForeignKey("CandidateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Candidate");
+                });
+
             modelBuilder.Entity("Server.Model.Entities.Candidate", b =>
                 {
-                    b.Navigation("CandidateCVs");
-
-                    b.Navigation("CandidateJobMatches");
-
                     b.Navigation("CandidateSkills");
+
+                    b.Navigation("Documents");
+
+                    b.Navigation("EducationHistory");
+
+                    b.Navigation("ExperienceHistory");
                 });
 
             modelBuilder.Entity("Server.Model.Entities.JobOpening", b =>
@@ -644,6 +689,11 @@ namespace recruitlab.server.Migrations
             modelBuilder.Entity("Server.Model.Entities.SkillCategory", b =>
                 {
                     b.Navigation("Skills");
+                });
+
+            modelBuilder.Entity("Server.Model.Entities.User", b =>
+                {
+                    b.Navigation("CandidateProfile");
                 });
 #pragma warning restore 612, 618
         }
