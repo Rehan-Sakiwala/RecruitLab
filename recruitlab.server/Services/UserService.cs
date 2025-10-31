@@ -189,7 +189,7 @@ namespace recruitlab.server.Services
             user.PasswordHash = _authService.CreatePasswordHash(dto.NewPassword);
             user.PasswordResetToken = null;
             user.ResetTokenExpiry = null;
-            user.Status = AccountStatus.Active; // Activate the account
+            user.Status = AccountStatus.Active;
             user.UpdatedAt = DateTime.UtcNow;
 
             _context.Users.Update(user);

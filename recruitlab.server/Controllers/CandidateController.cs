@@ -118,47 +118,6 @@ namespace Server.Controllers
 
             return NoContent();
         }
-
-        [HttpPost("{id}/skills")]
-        [Authorize(Roles = "Admin,Recruiter")]
-        public async Task<IActionResult> AddSkillToCandidate(int id, [FromBody] CreateCandidateSkillDto dto)
-        {
-            if (id != dto.CandidateId)
-                return BadRequest("Mismatched candidate ID");
-
-            var candidate = await _candidateRepo.FindByIdAsync(id);
-            if (candidate == null)
-                return NotFound(new { message = "Candidate not found" });
-
-            var skill = await _skillRepo.FindByIdAsync(dto.SkillId);
-            if (skill == null)
-                return NotFound(new { message = "Skill not found" });
-
-            var existingSkill = await _context.CandidateSkills
-                .FirstOrDefaultAsync(cs => cs.CandidateId == id && cs.SkillId == dto.SkillId);
-
-            if (existingSkill != null)
-                return BadRequest(new { message = "Skill already added to this candidate" });
-
-            var candidateSkill = new CandidateSkill
-            {
-                CandidateId = id,
-                SkillId = dto.SkillId,
-                Level = (SkillLevel)dto.Level,
-                YearsOfExperience = dto.YearsOfExperience,
-                Notes = dto.Notes,
-                LastUsed = dto.LastUsed,
-                IsVerified = dto.IsVerified
-            };
-
-            await _candidateSkillRepo.AddAsync(candidateSkill);
-            await _candidateSkillRepo.SaveChangesAsync();
-
-            return Ok(candidateSkill);
-        }
-
-        // Add other endpoints for Education, Experience, etc. here
-
         private int? GetCurrentUserId()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
@@ -167,7 +126,6 @@ namespace Server.Controllers
             return null;
         }
 
-        // --- MAPPERS ---
 
         private CandidateListDto MapToCandidateListDto(Candidate c)
         {
