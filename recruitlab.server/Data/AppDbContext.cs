@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using recruitlab.server.Model.Entities;
 using recruitlab.server.Model.Entities.Server.Model.Entities;
 using Server.Model.Entities;
 
@@ -22,6 +23,11 @@ namespace recruitlab.server.Data
         public DbSet<CandidateSkill> CandidateSkills { get; set; }
         public DbSet<JobOpening> JobOpenings { get; set; }
         public DbSet<JobSkill> JobSkills { get; set; }
+        public DbSet<Application> Applications { get; set; }
+        public DbSet<Interview> Interviews { get; set; }
+        public DbSet<InterviewAssignment> InterviewAssignments { get; set; }
+        public DbSet<Feedback> Feedbacks { get; set; }
+        public DbSet<SkillRating> SkillRatings { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
