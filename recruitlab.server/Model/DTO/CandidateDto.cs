@@ -1,4 +1,7 @@
-﻿namespace recruitlab.server.Model.DTO
+﻿using Server.Model.Entities;
+using System.ComponentModel.DataAnnotations;
+
+namespace recruitlab.server.Model.DTO
 {
     public class CandidateListDto
     {
@@ -16,7 +19,6 @@
         public List<string> Skills { get; set; } = new List<string>();
     }
 
-    // For the detailed GET /api/candidate/{id}
     public class CandidateProfileDto
     {
         public int Id { get; set; }
@@ -38,14 +40,11 @@
         public DateTime? AvailableFromDate { get; set; }
         public DateTime CreatedAt { get; set; }
         public string CreatedBy { get; set; } = string.Empty;
-
         public List<CandidateSkillDto> CandidateSkills { get; set; } = new List<CandidateSkillDto>();
         public List<EducationDto> EducationHistory { get; set; } = new List<EducationDto>();
         public List<ExperienceDto> ExperienceHistory { get; set; } = new List<ExperienceDto>();
         public List<DocumentDto> Documents { get; set; } = new List<DocumentDto>();
     }
-
-    // --- Sub-DTOs ---
 
     public class CandidateSkillDto
     {
@@ -71,6 +70,7 @@
         public DateTime StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public bool IsCurrent { get; set; }
+        public string? Notes { get; set; }
     }
 
     public class ExperienceDto
@@ -95,15 +95,83 @@
         public DateTime UploadedAt { get; set; }
     }
 
-    // DTO for POST /api/candidate/{id}/skills
     public class CreateCandidateSkillDto
     {
-        public int CandidateId { get; set; }
+        [Required]
         public int SkillId { get; set; }
+        [Required]
         public int Level { get; set; }
         public int? YearsOfExperience { get; set; }
         public string? Notes { get; set; }
         public DateTime LastUsed { get; set; }
         public bool IsVerified { get; set; }
+    }
+
+    public class UpdateCandidateSkillDto
+    {
+        [Required]
+        public int Level { get; set; }
+        public int? YearsOfExperience { get; set; }
+        public string? Notes { get; set; }
+        public DateTime LastUsed { get; set; }
+        public bool IsVerified { get; set; }
+    }
+
+    public class CreateEducationDto
+    {
+        [Required]
+        public string SchoolName { get; set; } = string.Empty;
+        [Required]
+        public string Degree { get; set; } = string.Empty;
+        public string FieldOfStudy { get; set; } = string.Empty;
+        public DateTime StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+        public bool IsCurrent { get; set; } = false;
+        public string? Notes { get; set; }
+    }
+
+    public class UpdateEducationDto
+    {
+        [Required]
+        public string SchoolName { get; set; } = string.Empty;
+        [Required]
+        public string Degree { get; set; } = string.Empty;
+        public string FieldOfStudy { get; set; } = string.Empty;
+        public DateTime StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+        public bool IsCurrent { get; set; } = false;
+        public string? Notes { get; set; }
+    }
+
+    public class CreateExperienceDto
+    {
+        [Required]
+        public string Position { get; set; } = string.Empty;
+        [Required]
+        public string CompanyName { get; set; } = string.Empty;
+        public string? Location { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+        public bool IsCurrent { get; set; } = false;
+        public string? Responsibilities { get; set; }
+    }
+
+    public class UpdateExperienceDto
+    {
+        [Required]
+        public string Position { get; set; } = string.Empty;
+        [Required]
+        public string CompanyName { get; set; } = string.Empty;
+        public string? Location { get; set; }
+        public DateTime StartDate { get; set; }
+        public DateTime? EndDate { get; set; }
+        public bool IsCurrent { get; set; } = false;
+        public string? Responsibilities { get; set; }
+    }
+
+    public class UploadCvDto
+    {
+        [Required]
+        public IFormFile File { get; set; } = null!;
     }
 }
