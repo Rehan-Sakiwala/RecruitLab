@@ -1,5 +1,5 @@
-import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useAuth } from "../contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const Layout = ({ children }) => {
   const { user, logout, isAdmin } = useAuth();
@@ -7,7 +7,7 @@ const Layout = ({ children }) => {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate("/login");
   };
 
   return (
@@ -17,17 +17,19 @@ const Layout = ({ children }) => {
           <div className="flex justify-between h-16">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <h1 className="text-xl font-bold text-indigo-600">RecruitLab</h1>
+                <h1 className="text-xl font-bold text-indigo-600">
+                  RecruitLab
+                </h1>
               </div>
               <div className="hidden md:ml-6 md:flex md:space-x-8">
                 <button
-                  onClick={() => navigate('/dashboard')}
+                  onClick={() => navigate("/dashboard")}
                   className="text-gray-900 hover:text-indigo-600 px-3 py-2 text-sm font-medium"
                 >
                   Dashboard
                 </button>
                 <button
-                  onClick={() => navigate('/jobs/create')}
+                  onClick={() => navigate("/jobs/create")}
                   className="text-gray-900 hover:text-indigo-600 px-3 py-2 text-sm font-medium"
                 >
                   Create Job
@@ -48,9 +50,7 @@ const Layout = ({ children }) => {
           </div>
         </div>
       </nav>
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        {children}
-      </main>
+      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">{children}</main>
     </div>
   );
 };
