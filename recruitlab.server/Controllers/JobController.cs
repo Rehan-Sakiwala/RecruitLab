@@ -35,6 +35,7 @@ namespace Server.Controllers
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public async Task<IActionResult> GetAllJobs()
         {
             var jobs = await dbContext.JobOpenings
@@ -49,6 +50,7 @@ namespace Server.Controllers
         }
 
         [HttpGet("{id}")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetJob(int id)
         {
             var job = await dbContext.JobOpenings

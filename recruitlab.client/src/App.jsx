@@ -1,80 +1,58 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext';
-import ProtectedRoute from './components/ProtectedRoute';
-import Layout from './components/Layout';
-import Login from './components/Login';
-import Dashboard from './components/Dashboard';
-import JobForm from './components/JobForm';
-import './App.css';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import "./App.css";
+import LandingPage from "./pages/LandingPage";
+import LoginPage from "./pages/LoginPage";
+import RecruiterLayout from "./layouts/RecruiterLayout";
+import RecruiterDashboard from "./pages/recruiter/RecruiterDashboard";
+import JobList from "./pages/recruiter/Jobs/JobList";
+import CreateJob from "./pages/recruiter/Jobs/CreateJob";
+import EditJob from "./pages/recruiter/Jobs/EditJob";
+import CandidateLayout from "./layouts/CandidateLayout";
+import CandidateDashboard from "./pages/candidate/CandidateDashboard";
+import MyApplications from "./pages/candidate/MyApplications";
+import CandidateProfile from "./pages/candidate/CandidateProfile";
+import CandidateJobs from "./pages/candidate/CandidateJobs";
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <div className="App">
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            
-            <Route path="/" element={
-              <ProtectedRoute>
-                <Layout>
-                  <Navigate to="/dashboard" replace />
-                </Layout>
-              </ProtectedRoute>
-            } />
-            
-            <Route path="/dashboard" element={
-              <ProtectedRoute>
-                <Layout>
-                  <Dashboard />
-                </Layout>
-              </ProtectedRoute>
-            } />
-            
-            <Route path="/jobs/create" element={
-              <ProtectedRoute>
-                <Layout>
-                  <JobForm />
-                </Layout>
-              </ProtectedRoute>
-            } />
-            
-            <Route path="/jobs/:id/edit" element={
-              <ProtectedRoute>
-                <Layout>
-                  <JobForm isEdit={true} />
-                </Layout>
-              </ProtectedRoute>
-            } />
-            
-            <Route path="/unauthorized" element={
-              <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <div className="max-w-md w-full space-y-8 text-center">
-                  <div>
-                    <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
-                      Access Denied
-                    </h2>
-                    <p className="mt-2 text-sm text-gray-600">
-                      You don't have permission to access this page.
-                    </p>
-                  </div>
-                  <div className="mt-8">
-                    <a
-                      href="/dashboard"
-                      className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                    >
-                      Go to Dashboard
-                    </a>
-                  </div>
-                </div>
-              </div>
-            } />
-            
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
-          </Routes>
-        </div>
-      </Router>
-    </AuthProvider>
+    <Routes>
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route
+        path="/signup"
+        element={
+          <div className="p-10 text-center">Signup Page Coming Soon</div>
+        }
+      />
+      {/* Recruiter Routes (Protected) */}
+      <Route path="/recruiter" element={<RecruiterLayout />}>
+        <Route path="dashboard" element={<RecruiterDashboard />} />
+        <Route path="jobs" element={<JobList />} />
+        <Route path="jobs/create" element={<CreateJob />} />
+        <Route path="jobs/edit/:id" element={<EditJob />} />
+        <Route
+          path="jobs/:jobId/pipeline"
+          element={<div className="p-10">Pipeline Board Coming Soon</div>}
+        />
+        {/* Placeholder Routes */}
+        <Route path="candidates" element={<div>Candidates Database</div>} />
+        <Route path="interviews" element={<div>Interviews Calendar</div>} />
+      </Route>
+
+      <Route path="/candidate" element={<CandidateLayout />}>
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<CandidateDashboard />} />
+        <Route path="jobs" element={<CandidateJobs />} />
+        <Route path="applications" element={<MyApplications />} />
+        <Route path="profile" element={<CandidateProfile />} />
+      </Route>
+      <Route path="/tasks" element={<div>My Tasks</div>} />
+    </Routes>
   );
 }
 
