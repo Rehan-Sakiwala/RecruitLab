@@ -21,7 +21,6 @@ const MyApplications = () => {
   }, []);
 
   const getStageBadge = (stage) => {
-    // Mapping enum values to text/colors
     // 1=Applied, 2=Screening, 3=Interview, 4=Offer, 5=Hired, 6=Rejected
     const stages = {
       1: { label: "Applied", color: "bg-blue-100 text-blue-800" },
