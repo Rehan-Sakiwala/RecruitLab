@@ -174,4 +174,24 @@ namespace recruitlab.server.Model.DTO
         [Required]
         public IFormFile File { get; set; } = null!;
     }
+
+    public class UpdatePersonalInfoDto
+    {
+        [Required]
+        public string FirstName { get; set; } = string.Empty;
+        [Required]
+        public string LastName { get; set; } = string.Empty;
+        [Phone]
+        public string? PhoneNumber { get; set; }
+        public string? LinkedInProfile { get; set; }
+        public string? PortfolioUrl { get; set; }
+    }
+
+    public class ChangePasswordDto
+    {
+        [Required]
+        public string CurrentPassword { get; set; } = string.Empty;
+        [Required, MinLength(6)]
+        public string NewPassword { get; set; } = string.Empty;
+    }
 }

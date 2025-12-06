@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using recruitlab.server.Data;
 using recruitlab.server.Model.DTO;
+using recruitlab.server.Services.Interface;
 using Server.Data;
 using Server.Model.DTO;
 using Server.Model.Entities;
@@ -18,18 +19,21 @@ namespace Server.Controllers
         private readonly IRepository<Candidate> _candidateRepo;
         private readonly IRepository<CandidateSkill> _candidateSkillRepo;
         private readonly IRepository<Skill> _skillRepo;
+        private readonly IAuthService _authService;
         private readonly AppDbContext _context;
 
         public CandidateController(
             IRepository<Candidate> candidateRepo,
             IRepository<CandidateSkill> candidateSkillRepo,
             IRepository<Skill> skillRepo,
-            AppDbContext dbContext)
+            AppDbContext dbContext,
+            IAuthService authService)
         {
             _candidateRepo = candidateRepo;
             _candidateSkillRepo = candidateSkillRepo;
             _skillRepo = skillRepo;
             _context = dbContext;
+            _authService = authService;
         }
 
         [HttpGet]
@@ -118,6 +122,71 @@ namespace Server.Controllers
 
             return NoContent();
         }
+
+        [HttpGet("my-profile")]
+        [Authorize(Roles = "Candidate")]
+        public async Task<IActionResult> GetMyProfile()
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+            var candidate = await _context.Candidates
+                .Include(c => c.User)
+                .Include(c => c.CandidateSkills).ThenInclude(cs => cs.Skill)
+                .Include(c => c.EducationHistory)
+                .Include(c => c.ExperienceHistory)
+                .Include(c => c.Documents)
+                .FirstOrDefaultAsync(c => c.UserId == userId);
+
+            if (candidate == null) return NotFound("Profile not found");
+
+            return Ok(MapToCandidateProfileDto(candidate));
+        }
+
+        [HttpPut("personal-info")]
+        [Authorize(Roles = "Candidate")]
+        public async Task<IActionResult> UpdatePersonalInfo([FromBody] UpdatePersonalInfoDto dto)
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+            var candidate = await _context.Candidates
+                .Include(c => c.User)
+                .FirstOrDefaultAsync(c => c.UserId == userId);
+
+            if (candidate == null) return NotFound("Candidate not found");
+
+            candidate.User.FirstName = dto.FirstName;
+            candidate.User.LastName = dto.LastName;
+            candidate.User.PhoneNumber = dto.PhoneNumber;
+            candidate.User.UpdatedAt = DateTime.UtcNow;
+
+            candidate.LinkedInProfile = dto.LinkedInProfile;
+            candidate.PortfolioUrl = dto.PortfolioUrl;
+            candidate.UpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            return Ok(new { message = "Personal info updated successfully" });
+        }
+
+        [HttpPost("change-password")]
+        [Authorize(Roles = "Candidate")]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto dto)
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var user = await _context.Users.FindAsync(userId);
+
+            if (user == null) return NotFound("User not found");
+
+            if (!_authService.VerifyPasswordHash(dto.CurrentPassword, user.PasswordHash))
+            {
+                return BadRequest("Incorrect current password");
+            }
+
+            user.PasswordHash = _authService.CreatePasswordHash(dto.NewPassword);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Password changed successfully" });
+        }
+
         private int? GetCurrentUserId()
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
@@ -153,10 +222,10 @@ namespace Server.Controllers
             {
                 Id = c.Id,
                 UserId = c.UserId,
-                FirstName = c.User.FirstName,
-                LastName = c.User.LastName,
-                Email = c.User.Email,
-                PhoneNumber = c.User.PhoneNumber,
+                FirstName = c.User?.FirstName ?? "",
+                LastName = c.User?.LastName ?? "",
+                Email = c.User?.Email ?? "",
+                PhoneNumber = c.User?.PhoneNumber,
                 LinkedInProfile = c.LinkedInProfile,
                 PortfolioUrl = c.PortfolioUrl,
                 CurrentSalary = c.CurrentSalary,
@@ -169,7 +238,7 @@ namespace Server.Controllers
                 IsAvailable = c.IsAvailable,
                 AvailableFromDate = c.AvailableFromDate,
                 CreatedAt = c.CreatedAt,
-                CreatedBy = c.CreatedByUser.Email,
+                CreatedBy = c.CreatedByUser?.Email ?? "System",
                 CandidateSkills = c.CandidateSkills.Select(cs => new CandidateSkillDto
                 {
                     Id = cs.Id,
