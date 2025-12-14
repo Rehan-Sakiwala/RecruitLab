@@ -31,9 +31,9 @@ const LoginPage = () => {
       } else if (user.role === "Recruiter" || user.role === "Admin") {
         navigate("/recruiter/dashboard");
       } else if (user.role === "Interviewer" || user.role === "HR") {
-        navigate("/tasks");
+        navigate("/interviewer/dashboard");
       } else {
-        navigate("/"); // Fallback to home if role is unrecognized
+        navigate("/");
       }
     }
 

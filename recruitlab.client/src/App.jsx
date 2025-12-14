@@ -17,6 +17,9 @@ import CandidateDashboard from "./pages/candidate/CandidateDashboard";
 import MyApplications from "./pages/candidate/MyApplications";
 import CandidateProfile from "./pages/candidate/CandidateProfile";
 import CandidateJobs from "./pages/candidate/CandidateJobs";
+import InterviewerLayout from "./layouts/InterviewerLayout";
+import InterviewerDashboard from "./pages/interviewer/InterviewerDashboard";
+import FeedbackForm from "./pages/interviewer/FeedbackForm";
 
 function App() {
   return (
@@ -51,7 +54,12 @@ function App() {
         <Route path="applications" element={<MyApplications />} />
         <Route path="profile" element={<CandidateProfile />} />
       </Route>
-      <Route path="/tasks" element={<div>My Tasks</div>} />
+
+      <Route path="/interviewer" element={<InterviewerLayout />}>
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<InterviewerDashboard />} />
+        <Route path="feedback/:interviewId" element={<FeedbackForm />} />
+      </Route>
     </Routes>
   );
 }

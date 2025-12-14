@@ -50,7 +50,7 @@ const JobCard = ({ job }) => {
             {job.location}
           </div>
           <div className="flex items-center gap-1 text-xs text-gray-500">
-            <DollarSign className="w-3 h-3" />
+            <span className="w-3 h-3 m-2">INR</span>
             {job.salaryMin
               ? `${job.salaryMin} - ${job.salaryMax}`
               : "Salary not disclosed"}
