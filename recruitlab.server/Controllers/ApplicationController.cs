@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using recruitlab.server.Data;
 using recruitlab.server.Model.DTO;
+using recruitlab.server.Model.DTO.Server.Model.DTO;
 using recruitlab.server.Model.Entities;
 using Server.Data;
 using Server.Model.Entities;
@@ -97,6 +98,75 @@ namespace recruitlab.server.Controllers
                 .ToListAsync();
 
             return Ok(applications);
+        }
+
+        [HttpPut("{id}/assign-reviewer")]
+        [Authorize(Roles = "Recruiter,Admin")]
+        public async Task<IActionResult> AssignReviewer(int id, [FromBody] int reviewerId)
+        {
+            var app = await _context.Applications.FindAsync(id);
+            if (app == null) return NotFound("Application not found.");
+
+            app.AssignedReviewerId = reviewerId;
+            app.Stage = ApplicationStage.Screening;
+            app.StatusUpdatedAt = DateTime.UtcNow;
+
+            await _context.SaveChangesAsync();
+            return Ok(new { message = "Reviewer assigned successfully." });
+        }
+
+        [HttpGet("job/{jobId}")]
+        [Authorize(Roles = "Recruiter,Admin")]
+        public async Task<IActionResult> GetApplicationsByJob(int jobId)
+        {
+            var applications = await _context.Applications
+                .Include(a => a.Candidate).ThenInclude(c => c.User)
+                .Include(a => a.AssignedReviewer)
+                .Where(a => a.JobOpeningId == jobId)
+                .OrderByDescending(a => a.AppliedAt)
+                .Select(a => new ApplicationRecruiterViewDto
+                {
+                    Id = a.Id,
+                    CandidateId = a.CandidateId,
+                    CandidateName = $"{a.Candidate.User.FirstName} {a.Candidate.User.LastName}",
+                    CandidateEmail = a.Candidate.User.Email,
+                    Stage = a.Stage.ToString(),
+                    AppliedAt = a.AppliedAt,
+                    AssignedReviewerId = a.AssignedReviewerId,
+                    ReviewerName = a.AssignedReviewer != null
+                        ? $"{a.AssignedReviewer.FirstName} {a.AssignedReviewer.LastName}"
+                        : "Unassigned"
+                })
+                .ToListAsync();
+
+            return Ok(applications);
+        }
+
+        [HttpPost("{id}/screening-result")]
+        [Authorize(Roles = "Interviewer,HR,Recruiter,Admin")]
+        public async Task<IActionResult> SubmitScreeningResult(int id, [FromBody] ScreeningResultDto dto)
+        {
+            var app = await _context.Applications.FindAsync(id);
+            if (app == null) return NotFound("Application not found.");
+
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            if (app.AssignedReviewerId != userId) return Forbid();
+
+            app.ScreeningNotes = dto.Comments;
+            app.StatusUpdatedAt = DateTime.UtcNow;
+
+            if (dto.IsShortlisted)
+            {
+                app.Stage = ApplicationStage.Interview;
+            }
+            else
+            {
+                app.Stage = ApplicationStage.Rejected;
+                app.RejectionReason = "Screening Rejected: " + dto.Comments;
+            }
+
+            await _context.SaveChangesAsync();
+            return Ok(new { message = dto.IsShortlisted ? "Candidate Shortlisted." : "Candidate Rejected." });
         }
     }
 }
