@@ -73,6 +73,9 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddSingleton<IFileService, FileService>();
+builder.Services.AddScoped<EmailTemplateService>();
+builder.Services.AddScoped<HtmlTemplateService>();
+
 
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>

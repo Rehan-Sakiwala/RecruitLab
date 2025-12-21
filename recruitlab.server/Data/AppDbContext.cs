@@ -29,6 +29,8 @@ namespace recruitlab.server.Data
         public DbSet<InterviewAssignment> InterviewAssignments { get; set; }
         public DbSet<Feedback> Feedbacks { get; set; }
         public DbSet<SkillRating> SkillRatings { get; set; }
+        public DbSet<OfferLetter> OfferLetters { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

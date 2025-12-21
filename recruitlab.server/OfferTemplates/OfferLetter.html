@@ -1,0 +1,44 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body {
+            font-family: Arial;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+
+    <p>Date: {{OfferDate}}</p>
+
+    <p>Dear {{CandidateName}},</p>
+
+    <p>
+        We are pleased to offer you the position of <b>{{JobTitle}}</b>
+        at <b>{{CompanyName}}</b> as a <b>{{JobType}}</b>.
+    </p>
+
+    <p>
+        <b>Compensation:</b> {{Compensation}}<br />
+        <b>Work Location:</b> {{WorkLocation}}<br />
+        <b>Reporting To:</b> {{ReportingTo}}
+    </p>
+
+    <p>
+        Your expected joining date is <b>{{JoiningDate}}</b>.
+    </p>
+
+    <p>
+        We look forward to working with you.
+    </p>
+
+    <p>
+        Sincerely,<br />
+        HR Team<br />
+        {{CompanyName}}
+    </p>
+
+</body>
+</html>
