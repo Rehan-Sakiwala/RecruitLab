@@ -10,6 +10,7 @@ import {
   LogOut,
   Bell,
   User,
+  FileText,
 } from "lucide-react";
 
 const RecruiterLayout = () => {
@@ -34,6 +35,11 @@ const RecruiterLayout = () => {
       name: "Candidates",
       path: "/recruiter/candidates",
       icon: <Users size={20} />,
+    },
+    {
+      name: "Applications",
+      path: "/recruiter/applications",
+      icon: <FileText size={20} />,
     },
     {
       name: "Interviews",
