@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import jobService from "../../services/jobService";
 import applicationService from "../../services/applicationService";
+import ScheduleInterviewModal from "../../components/ScheduleInterviewModal";
 import { Search, Loader2, MapPin, ChevronRight, Filter } from "lucide-react";
 
 const Applications = () => {
@@ -12,14 +13,14 @@ const Applications = () => {
   const [loadingApps, setLoadingApps] = useState(false);
   const [search, setSearch] = useState("");
 
+  const [scheduleModalOpen, setScheduleModalOpen] = useState(false);
+  const [selectedAppForSchedule, setSelectedAppForSchedule] = useState(null);
+
   useEffect(() => {
     fetchJobs();
   }, []);
-
   useEffect(() => {
-    if (selectedJob?.id) {
-      fetchApplications(selectedJob.id);
-    }
+    if (selectedJob?.id) fetchApplications(selectedJob.id);
   }, [selectedJob]);
 
   const fetchJobs = async () => {
@@ -28,19 +29,12 @@ const Applications = () => {
       const response = await jobService.getAllJobs();
 
       let list = [];
-      if (Array.isArray(response)) {
-        list = response;
-      } else if (response && Array.isArray(response.jobs)) {
-        list = response.jobs;
-      } else if (response && Array.isArray(response.data)) {
-        list = response.data;
-      }
+      if (Array.isArray(response)) list = response;
+      else if (response && Array.isArray(response.jobs)) list = response.jobs;
+      else if (response && Array.isArray(response.data)) list = response.data;
 
       setJobs(list);
-
-      if (list.length > 0 && !selectedJob) {
-        setSelectedJob(list[0]);
-      }
+      if (list.length > 0 && !selectedJob) setSelectedJob(list[0]);
     } catch (error) {
       console.error("Error fetching jobs:", error);
     } finally {
@@ -54,13 +48,10 @@ const Applications = () => {
       const response = await applicationService.getApplicationsForJob(jobId);
 
       let list = [];
-      if (Array.isArray(response)) {
-        list = response;
-      } else if (response && Array.isArray(response.applications)) {
+      if (Array.isArray(response)) list = response;
+      else if (response && Array.isArray(response.applications))
         list = response.applications;
-      } else if (response && Array.isArray(response.data)) {
-        list = response.data;
-      }
+      else if (response && Array.isArray(response.data)) list = response.data;
 
       setApplications(list);
     } catch (error) {
@@ -69,6 +60,12 @@ const Applications = () => {
     } finally {
       setLoadingApps(false);
     }
+  };
+
+  // Open Modal Handler
+  const handleOpenSchedule = (app) => {
+    setSelectedAppForSchedule(app);
+    setScheduleModalOpen(true);
   };
 
   const getStatusStyle = (status) => {
@@ -88,13 +85,25 @@ const Applications = () => {
     }
   };
 
-  // Safe filter for search
   const filteredJobs = jobs.filter((j) =>
     j.title?.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
     <div className="flex h-[calc(100vh-7rem)] border border-gray-200 rounded-lg bg-white shadow-sm overflow-hidden">
+      {/* --- SCHEDULE INTERVIEW MODAL --- */}
+      {scheduleModalOpen && selectedAppForSchedule && (
+        <ScheduleInterviewModal
+          applicationId={selectedAppForSchedule.id}
+          candidateName={selectedAppForSchedule.candidateName || "Candidate"}
+          onClose={() => setScheduleModalOpen(false)}
+          onSuccess={() => {
+            // Refresh list to update status to 'Interview'
+            if (selectedJob?.id) fetchApplications(selectedJob.id);
+          }}
+        />
+      )}
+
       {/* LEFT: Jobs Sidebar */}
       <div className="w-80 border-r border-gray-200 flex flex-col bg-gray-50">
         <div className="p-4 border-b border-gray-200 bg-white">
@@ -222,10 +231,10 @@ const Applications = () => {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <button
-                        onClick={() => alert(`Review App ID: ${app.id}`)}
+                        onClick={() => handleOpenSchedule(app)}
                         className="text-blue-600 hover:text-blue-800 font-medium text-xs border border-blue-100 hover:bg-blue-50 px-3 py-1.5 rounded transition"
                       >
-                        Review
+                        Schedule
                       </button>
                     </td>
                   </tr>
