@@ -23,6 +23,9 @@ import FeedbackForm from "./pages/interviewer/FeedbackForm";
 import Signup from "./pages/Signup";
 import Candidates from "./pages/recruiter/Candidates";
 import Applications from "./pages/recruiter/Applications";
+import AdminLayout from "./layouts/AdminLayout";
+import UserManagement from "./pages/admin/UserManagement";
+import AdminReports from "./pages/admin/AdminReports";
 
 function App() {
   return (
@@ -44,6 +47,11 @@ function App() {
         <Route path="applications" element={<Applications />} />
         {/* Placeholder Routes */}
         <Route path="interviews" element={<div>Interviews Calendar</div>} />
+      </Route>
+
+      <Route path="/admin" element={<AdminLayout />}>
+        <Route path="users" element={<UserManagement />} />
+        <Route path="reports" element={<AdminReports />} />
       </Route>
 
       <Route path="/candidate" element={<CandidateLayout />}>
