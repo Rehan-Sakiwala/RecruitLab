@@ -21,6 +21,7 @@ import InterviewerLayout from "./layouts/InterviewerLayout";
 import InterviewerDashboard from "./pages/interviewer/InterviewerDashboard";
 import FeedbackForm from "./pages/interviewer/FeedbackForm";
 import Signup from "./pages/Signup";
+import Candidates from "./pages/recruiter/Candidates";
 
 function App() {
   return (
@@ -38,8 +39,8 @@ function App() {
           path="jobs/:jobId/pipeline"
           element={<div className="p-10">Pipeline Board Coming Soon</div>}
         />
+        <Route path="candidates" element={<Candidates />} />
         {/* Placeholder Routes */}
-        <Route path="candidates" element={<div>Candidates Database</div>} />
         <Route path="interviews" element={<div>Interviews Calendar</div>} />
       </Route>
 
