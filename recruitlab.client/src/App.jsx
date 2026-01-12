@@ -20,18 +20,14 @@ import CandidateJobs from "./pages/candidate/CandidateJobs";
 import InterviewerLayout from "./layouts/InterviewerLayout";
 import InterviewerDashboard from "./pages/interviewer/InterviewerDashboard";
 import FeedbackForm from "./pages/interviewer/FeedbackForm";
+import Signup from "./pages/Signup";
 
 function App() {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
-      <Route
-        path="/signup"
-        element={
-          <div className="p-10 text-center">Signup Page Coming Soon</div>
-        }
-      />
+      <Route path="/signup" element={<Signup />} />
       {/* Recruiter Routes (Protected) */}
       <Route path="/recruiter" element={<RecruiterLayout />}>
         <Route path="dashboard" element={<RecruiterDashboard />} />
