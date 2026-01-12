@@ -1,13 +1,16 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchOpenJobs, setCurrentPage } from "../features/jobs/jobSlice";
 import Navbar from "../components/Navbar";
 import JobCard from "../components/JobCard";
-import { Users, Zap, Heart } from "lucide-react";
-import { Search } from "lucide-react";
+import { Users, Zap, Heart, Search, X } from "lucide-react";
+import JobDetailModal from "../components/JobDetailModal";
 
 const LandingPage = () => {
   const dispatch = useDispatch();
+  const [selectedJob, setSelectedJob] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+
   const {
     list: jobs,
     loading,
@@ -20,10 +23,29 @@ const LandingPage = () => {
     dispatch(fetchOpenJobs());
   }, [dispatch]);
 
+  // Search Functionality
+  const filteredJobs = jobs.filter((job) => {
+    if (!searchTerm) return true;
+    const term = searchTerm.toLowerCase();
+
+    // Check Title, Department, Location
+    const basicMatch =
+      job.title?.toLowerCase().includes(term) ||
+      job.department?.toLowerCase().includes(term) ||
+      job.location?.toLowerCase().includes(term);
+
+    // Check Skills (Nested Array)
+    const skillMatch = job.jobSkills?.some((skill) =>
+      skill.skillName?.toLowerCase().includes(term)
+    );
+
+    return basicMatch || skillMatch;
+  });
+
   // Pagination Calculation
   const indexOfLastJob = currentPage * jobsPerPage;
   const indexOfFirstJob = indexOfLastJob - jobsPerPage;
-  const currentJobs = jobs.slice(indexOfFirstJob, indexOfLastJob);
+  const currentJobs = filteredJobs.slice(indexOfFirstJob, indexOfLastJob);
   const totalPages = Math.ceil(jobs.length / jobsPerPage);
 
   const handlePageChange = (pageNumber) => {
@@ -35,6 +57,8 @@ const LandingPage = () => {
   return (
     <div className="min-h-screen bg-gray-50 font-sans text-gray-900">
       <Navbar />
+
+      <JobDetailModal job={selectedJob} onClose={() => setSelectedJob(null)} />
 
       {/* Description */}
       <div className="bg-white border-b border-gray-200">
@@ -121,20 +145,43 @@ const LandingPage = () => {
         id="job-section"
         className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16"
       >
-        <div className="flex justify-between items-end mb-8">
+        <div className="flex flex-col md:flex-row justify-between items-end mb-8 gap-4">
           <div>
             <h2 className="text-3xl font-bold text-gray-900">
               Current Openings
             </h2>
             <p className="text-gray-500 mt-2">
               Join our growing team. We currently have{" "}
-              <span className="font-semibold text-gray-900">{jobs.length}</span>{" "}
-              open positions.
+              <span className="font-semibold text-gray-900">
+                {filteredJobs.length}
+              </span>{" "}
+              matching positions.
             </p>
+          </div>
+
+          {/* Search Input */}
+          <div className="relative w-full md:w-96">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search className="h-5 w-5 text-gray-400" />
+            </div>
+            <input
+              type="text"
+              className="block w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-shadow shadow-sm"
+              placeholder="Search by role, skill, or location..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm("")}
+                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Loading State */}
         {loading && (
           <div className="flex flex-col items-center justify-center py-20">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
@@ -142,34 +189,35 @@ const LandingPage = () => {
           </div>
         )}
 
-        {/* Error State */}
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center text-red-700 my-10">
             <p>Unable to load jobs. Please try again later.</p>
           </div>
         )}
 
-        {/* Empty State */}
-        {!loading && !error && jobs.length === 0 && (
-          <div className="text-center py-24 bg-white rounded-xl border border-gray-200">
-            <div className="text-gray-300 mb-4">
-              <BriefcaseIcon className="w-16 h-16 mx-auto" />
-            </div>
-            <p className="text-xl font-semibold text-gray-900">
-              No open positions right now
+        {!loading && !error && filteredJobs.length === 0 && (
+          <div className="text-center py-20 bg-white rounded-xl border border-gray-200 border-dashed">
+            <p className="text-gray-500 text-lg">
+              No jobs found matching "{searchTerm}"
             </p>
-            <p className="text-gray-500 mt-2">
-              Check back soon or follow us on LinkedIn for updates.
-            </p>
+            <button
+              onClick={() => setSearchTerm("")}
+              className="mt-4 text-blue-600 font-medium hover:underline"
+            >
+              Clear search
+            </button>
           </div>
         )}
 
-        {/* Job Grid */}
-        {!loading && !error && jobs.length > 0 && (
+        {!loading && !error && filteredJobs.length > 0 && (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {currentJobs.map((job) => (
-                <JobCard key={job.id} job={job} />
+                <JobCard
+                  key={job.id}
+                  job={job}
+                  onDetailsClick={() => setSelectedJob(job)}
+                />
               ))}
             </div>
 
@@ -179,11 +227,10 @@ const LandingPage = () => {
                 <button
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
                 >
                   Previous
                 </button>
-
                 {[...Array(totalPages)].map((_, idx) => (
                   <button
                     key={idx + 1}
@@ -197,11 +244,10 @@ const LandingPage = () => {
                     {idx + 1}
                   </button>
                 ))}
-
                 <button
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage === totalPages}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
                 >
                   Next
                 </button>
@@ -213,21 +259,5 @@ const LandingPage = () => {
     </div>
   );
 };
-
-const BriefcaseIcon = ({ className }) => (
-  <svg
-    className={className}
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={1.5}
-      d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-    />
-  </svg>
-);
 
 export default LandingPage;
