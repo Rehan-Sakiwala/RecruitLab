@@ -28,7 +28,9 @@ const LoginPage = () => {
     if (isSuccess || user) {
       if (user.role === "Candidate") {
         navigate("/candidate/dashboard");
-      } else if (user.role === "Recruiter" || user.role === "Admin") {
+      } else if (user.role === "Admin") {
+        navigate("/admin/dashboard");
+      } else if (user.role === "Recruiter") {
         navigate("/recruiter/dashboard");
       } else if (user.role === "Interviewer" || user.role === "HR") {
         navigate("/interviewer/dashboard");

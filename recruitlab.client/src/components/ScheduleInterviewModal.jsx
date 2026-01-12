@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import interviewService from "../services/interviewService";
+import userService from "../services/userService";
 import {
   X,
   Calendar,
@@ -7,6 +8,9 @@ import {
   Loader2,
   Link as LinkIcon,
   Type,
+  Users,
+  CheckSquare,
+  Square,
 } from "lucide-react";
 
 const ScheduleInterviewModal = ({
@@ -16,6 +20,11 @@ const ScheduleInterviewModal = ({
   onSuccess,
 }) => {
   const [loading, setLoading] = useState(false);
+
+  // 1. Array for Multiple Selection
+  const [interviewersList, setInterviewersList] = useState([]);
+  const [selectedInterviewerIds, setSelectedInterviewerIds] = useState([]);
+
   const [formData, setFormData] = useState({
     date: "",
     time: "",
@@ -24,8 +33,33 @@ const ScheduleInterviewModal = ({
     meetLink: "",
   });
 
+  useEffect(() => {
+    const fetchInterviewers = async () => {
+      try {
+        const data = await userService.getInterviewers();
+        setInterviewersList(data || []);
+      } catch (error) {
+        console.error("Failed to load interviewers", error);
+      }
+    };
+    fetchInterviewers();
+  }, []);
+
+  // 2. Toggle Selection Helper
+  const toggleInterviewer = (id) => {
+    setSelectedInterviewerIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (selectedInterviewerIds.length === 0) {
+      alert("Please assign at least one interviewer.");
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -39,10 +73,10 @@ const ScheduleInterviewModal = ({
         roundType: parseInt(formData.roundType),
         scheduledTime: scheduledTime,
         meetLink: formData.meetLink,
-        interviewerIds: [],
+
+        interviewerIds: selectedInterviewerIds,
       };
 
-      //Call API
       await interviewService.scheduleInterview(payload);
 
       alert("Interview Scheduled Successfully!");
@@ -50,7 +84,7 @@ const ScheduleInterviewModal = ({
       onClose();
     } catch (error) {
       console.error("Scheduling failed", error);
-      alert("Failed to schedule interview. Check console details.");
+      alert("Failed to schedule interview. Check console.");
     } finally {
       setLoading(false);
     }
@@ -76,7 +110,64 @@ const ScheduleInterviewModal = ({
             Candidate: <span className="font-bold">{candidateName}</span>
           </div>
 
-          {/* Date & Time Row */}
+          {/* 4. Multi-Select Interviewer List */}
+          <div>
+            <div className="flex justify-between items-end mb-1">
+              <label className="text-xs font-bold text-gray-500 uppercase">
+                Assign Interviewers
+              </label>
+              <span className="text-xs text-blue-600 font-medium">
+                {selectedInterviewerIds.length} selected
+              </span>
+            </div>
+
+            <div className="border border-gray-300 rounded-lg max-h-32 overflow-y-auto bg-gray-50 p-1">
+              {interviewersList.length === 0 ? (
+                <p className="text-xs text-orange-500 p-2">
+                  No interviewers found.
+                </p>
+              ) : (
+                interviewersList.map((user) => {
+                  const isSelected = selectedInterviewerIds.includes(user.id);
+                  return (
+                    <div
+                      key={user.id}
+                      onClick={() => toggleInterviewer(user.id)}
+                      className={`flex items-center gap-3 p-2 rounded cursor-pointer transition-colors ${
+                        isSelected
+                          ? "bg-blue-50 border border-blue-100"
+                          : "hover:bg-white"
+                      }`}
+                    >
+                      <div
+                        className={`text-blue-600 ${
+                          isSelected ? "opacity-100" : "opacity-40"
+                        }`}
+                      >
+                        {isSelected ? (
+                          <CheckSquare size={16} />
+                        ) : (
+                          <Square size={16} />
+                        )}
+                      </div>
+                      <div>
+                        <p
+                          className={`text-sm font-medium ${
+                            isSelected ? "text-blue-900" : "text-gray-700"
+                          }`}
+                        >
+                          {user.name}
+                        </p>
+                        <p className="text-xs text-gray-400">{user.role}</p>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+
+          {/* Date & Time */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-gray-500 uppercase mb-1">
